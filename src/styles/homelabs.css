@@ -267,7 +267,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   .hero-card-top strong { font-size: 42px; }
 }
 
-/* Phase 3+ dashboard and portal preview styles */
+/* Dashboard and portal styles */
 .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: white; border-radius: 999px; font-weight: 950; cursor: pointer; }
 .outline-button.large { padding: 16px 22px; font-size: 16px; }
 .portal-login-button { white-space: nowrap; }
@@ -364,7 +364,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   .mini-record { display: grid; }
 }
 
-/* Phase 4 refactor: dashboard sections, service-layer-ready pages and mobile field views */
+/* Dashboard sections, service-layer pages and mobile field views */
 .dashboard-nav button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 14px; border: 0; border-radius: 16px; background: transparent; color: #d6edf2; font-weight: 900; text-align: left; cursor: pointer; }
 .dashboard-nav button:hover, .dashboard-nav button.active { background: rgba(255,255,255,.12); color: white; }
 .stat-card small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.45; }
@@ -421,7 +421,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   .mini-record-actions { justify-items: start; }
 }
 
-/* Phase 5: public tracking, partner enquiry and integration-readiness polish */
+/* Public tracking, partner enquiry and integration-readiness polish */
 .service-area-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .service-area-actions .outline-button { color: var(--navy); border-color: var(--line); padding: 13px 18px; }
 .footer-cta-stack { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -475,7 +475,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   .tracker-heading, .service-area-actions, .tracker-actions, .footer-cta-stack { display: grid; }
 }
 
-/* Phase 6: booking validation, Paystack method UX and frontend QA readiness */
+/* Booking validation and Paystack method UX */
 .validation-panel {
   display: grid;
   gap: 10px;
@@ -500,31 +500,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 }
 .recent-booking-callout strong { font-size: 30px; letter-spacing: -.04em; }
 .recent-booking-callout span { color: var(--muted); text-transform: none; letter-spacing: 0; font-size: 14px; }
-.qa-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.qa-grid span {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--soft);
-  color: var(--navy);
-  font-weight: 850;
-  line-height: 1.45;
-}
-.qa-grid svg { flex-shrink: 0; color: var(--teal); }
-
 @media (max-width: 760px) {
-  .qa-grid { grid-template-columns: 1fr; }
   .recent-booking-callout { width: 100%; text-align: center; }
 }
 
-/* Phase 7: operational interactivity and frontend-state workflow actions */
+/* Operational interactivity and workflow actions */
 .primary-button.tiny,
 .secondary-button.tiny {
   padding: 8px 11px;
@@ -587,71 +567,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   .compact-select { width: 100%; }
 }
 
-/* Phase 8: QA center, state persistence and final frontend polish */
-.qa-status-grid,
-.qa-script-list,
-.device-check-grid,
-.activity-log-list,
-.known-limit-grid {
+/* Frontend polish */
+.activity-log-list {
   display: grid;
   gap: 12px;
-}
-.qa-status-card {
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 15px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--soft);
-}
-.qa-status-card svg {
-  color: var(--teal);
-  margin-top: 2px;
-}
-.qa-status-card strong,
-.qa-script-list span {
-  display: block;
-  color: var(--navy);
-  font-weight: 950;
-}
-.qa-status-card span,
-.qa-script-list small,
-.activity-log-list span,
-.known-limit-grid span,
-.qa-action-panel small,
-.qa-note-card span {
-  color: var(--muted);
-  line-height: 1.5;
-}
-.qa-script-list article {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: white;
-}
-.qa-script-list article > strong {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 15px;
-  background: var(--mint);
-  color: var(--teal);
-  font-size: 18px;
-}
-.qa-action-panel {
-  display: grid;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 18px;
-  background: var(--mint-2);
-  border: 1px solid #bbebe7;
 }
 .activity-log-list article {
   display: flex;
@@ -662,55 +581,14 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   border-radius: 16px;
   background: #fff;
 }
-.activity-log-list svg,
-.qa-note-card svg,
-.known-limit-grid svg {
+.activity-log-list svg {
   flex-shrink: 0;
   color: var(--teal);
   margin-top: 2px;
 }
-.qa-note-card {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 18px;
-  background: var(--mint-2);
-  border: 1px solid #bbebe7;
-}
-.known-limit-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.known-limit-grid span {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 14px;
-  border: 1px solid #ffd7d3;
-  border-radius: 16px;
-  background: #fff7f6;
-  color: #7b312b;
-  font-weight: 800;
-}
-.status-passed,
-.status-added,
-.status-ready-for-browser-review {
-  background: #e8fff4;
-  color: #08714c;
-}
-.status-required {
-  background: #fff6df;
-  color: #815b00;
-}
-@media (max-width: 1060px) {
-  .known-limit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 760px) {
-  .qa-status-card,
-  .qa-script-list article { grid-template-columns: 1fr; }
-  .known-limit-grid { grid-template-columns: 1fr; }
-  .qa-status-card .status-badge { justify-self: start; }
+.activity-log-list span {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .connection-strip {
@@ -747,13 +625,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
   }
 }
 
-/* Phase 11: workflow QA and backend smoke-test polish */
+/* Workflow and backend connection polish */
 .api-map-grid.single-column {
   grid-template-columns: 1fr;
 }
-.status-mock-demo,
 .status-backend-connected,
-.status-placeholder-ready {
+ .status-production-ready {
   background: #e9f9ff;
   color: #075c79;
 }
@@ -762,4 +639,129 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 .status-added {
   background: #e8fff4;
   color: #08714c;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.pagination-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-controls strong {
+  color: var(--navy);
+  font-size: .88rem;
+}
+
+.pagination-controls button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .pagination-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* Route-level lazy loading and code-splitting feedback */
+.route-loader,
+.dashboard-portal-loader {
+  display: grid;
+  place-items: center;
+  gap: 0.65rem;
+  min-height: 44vh;
+  padding: 4rem 1.5rem;
+  text-align: center;
+  color: var(--navy);
+  background: radial-gradient(circle at top, rgba(20, 184, 166, 0.10), transparent 35%), #f8fbfc;
+}
+
+.dashboard-portal-loader {
+  min-height: 320px;
+  border: 1px solid rgba(20, 184, 166, 0.18);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(59, 130, 246, 0.05));
+}
+
+.route-loader small,
+.dashboard-portal-loader small {
+  max-width: 360px;
+  color: var(--muted);
+}
+
+.route-loader__spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(20, 184, 166, 0.20);
+  border-top-color: var(--teal);
+  border-radius: 999px;
+  animation: homelabs-spin 0.85s linear infinite;
+}
+
+@keyframes homelabs-spin {
+  to { transform: rotate(360deg); }
+}
+
+
+.google-auth-block {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.google-button-wrap {
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+}
+
+.google-button-wrap[aria-busy='true'] {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.google-config-note {
+  border: 1px dashed rgba(15, 23, 42, 0.22);
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  background: rgba(248, 250, 252, 0.86);
 }

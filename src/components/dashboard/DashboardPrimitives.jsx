@@ -68,3 +68,20 @@ export function Timeline({ items }) {
     </div>
   );
 }
+
+export function PaginationControls({ meta, onPageChange, label = 'records' }) {
+  if (!meta || !meta.total || meta.totalPages <= 1) return null;
+  const start = ((meta.page - 1) * meta.limit) + 1;
+  const end = Math.min(meta.page * meta.limit, meta.total);
+
+  return (
+    <div className="pagination-controls">
+      <span>Showing {start}–{end} of {meta.total} {label}</span>
+      <div>
+        <button className="secondary-button tiny" type="button" disabled={!meta.hasPreviousPage} onClick={() => onPageChange(meta.page - 1)}>Previous</button>
+        <strong>Page {meta.page} of {meta.totalPages}</strong>
+        <button className="secondary-button tiny" type="button" disabled={!meta.hasNextPage} onClick={() => onPageChange(meta.page + 1)}>Next</button>
+      </div>
+    </div>
+  );
+}

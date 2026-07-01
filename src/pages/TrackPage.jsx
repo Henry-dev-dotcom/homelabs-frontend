@@ -5,7 +5,7 @@ import { trackBooking } from '../services/trackingService.js';
 
 export function TrackPage({ onBackHome, onBook, onLogin }) {
   const recentBooking = readRecentBooking();
-  const defaultId = recentBooking?.id || 'HLB-2403';
+  const defaultId = recentBooking?.id || '';
   const [query, setQuery] = useState(defaultId);
   const [submittedQuery, setSubmittedQuery] = useState(defaultId);
   const [tracking, setTracking] = useState(null);
@@ -13,10 +13,17 @@ export function TrackPage({ onBackHome, onBook, onLogin }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const trimmedQuery = String(submittedQuery || '').trim();
+    if (!trimmedQuery) {
+      setTracking(null);
+      setLoading(false);
+      setError('');
+      return undefined;
+    }
     let active = true;
     setLoading(true);
     setError('');
-    trackBooking(submittedQuery)
+    trackBooking(trimmedQuery)
       .then((result) => { if (active) setTracking(result); })
       .catch((err) => { if (active) setError(err.message || 'Unable to track booking.'); })
       .finally(() => { if (active) setLoading(false); });
@@ -43,7 +50,12 @@ export function TrackPage({ onBackHome, onBook, onLogin }) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    setSubmittedQuery(query || defaultId);
+    const value = String(query || '').trim();
+    if (!value) {
+      setError('Enter your secure booking code to track a booking.');
+      return;
+    }
+    setSubmittedQuery(value);
   }
 
   return (
@@ -67,12 +79,12 @@ export function TrackPage({ onBackHome, onBook, onLogin }) {
               <span>Booking ID</span>
               <div className="input-with-icon">
                 <Search size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Example: HLB-2403" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Enter your secure booking code" />
               </div>
             </label>
             <button className="primary-button" type="submit" disabled={loading}>{loading ? 'Tracking...' : 'Track booking'}</button>
           </form>
-          <small>Demo IDs: HLB-2401, HLB-2402, HLB-2403, HLB-2404. In connected mode, use the backend publicCode returned after booking.</small>
+          <small>Enter the secure booking code returned after booking.</small>
           {error && <div className="form-error-list"><strong>Tracking issue</strong><ul><li>{error}</li></ul></div>}
         </div>
 
@@ -134,8 +146,9 @@ export function TrackPage({ onBackHome, onBook, onLogin }) {
 
 function readRecentBooking() {
   try {
-    const raw = localStorage.getItem('homelabs_recent_booking');
-    return raw ? JSON.parse(raw) : null;
+    const raw = sessionStorage.getItem('homelabs_recent_booking') || localStorage.getItem('homelabs_recent_booking');
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.id ? { id: parsed.id } : null;
   } catch {
     return null;
   }

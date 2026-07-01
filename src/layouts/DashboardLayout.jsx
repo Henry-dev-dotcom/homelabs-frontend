@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   BarChart3,
   CalendarClock,
-  Cable,
   ClipboardCheck,
   CreditCard,
   FileText,
@@ -38,8 +37,7 @@ export const sidebarItems = {
     { id: 'tests', label: 'Test Catalog', icon: FlaskConical },
     { id: 'labs', label: 'Labs & Partners', icon: Home },
     { id: 'payments', label: 'Payments', icon: CreditCard },
-    { id: 'qa', label: 'QA Center', icon: ListChecks },
-    { id: 'integration', label: 'API Readiness', icon: Cable },
+    { id: 'integration', label: 'API & Deployment', icon: Settings },
     { id: 'settings', label: 'Settings', icon: Settings }
   ],
   patient: [
@@ -94,10 +92,8 @@ export function DashboardLayout({ role, activePage, onActivePageChange, onRoleCh
         <button className="back-button" type="button" onClick={onBackHome}><ArrowLeft size={16} /> Website</button>
         <BrandMark />
         <div className="portal-switcher">
-          <span>Preview role</span>
-          <select value={role} onChange={(event) => onRoleChange(event.target.value)}>
-            {roles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
+          <span>Signed-in portal</span>
+          <strong>{roleDetails.name}</strong>
         </div>
         <nav className="dashboard-nav">
           {items.map((item) => {

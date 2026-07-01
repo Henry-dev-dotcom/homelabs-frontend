@@ -1,53 +1,29 @@
-# HomeLabs Frontend
+# HomeLabs Frontend — Production Deployment
 
-React/Vite frontend for the HomeLabs Ghana mobile phlebotomy platform.
+This frontend is configured for live backend use only. Only live backend data is used. Default login hints, bundled records, and internal verification pages have been removed.
 
-This repository is intended to be deployed separately on **Vercel**.
+## Requirements
 
-## Tech stack
+- Node.js 20+
+- A deployed HomeLabs backend
+- Production frontend environment variables configured in Vercel, Netlify, Docker, or your chosen host
 
-- React
-- Vite
-- React Router
-- Modular service layer for backend API calls
-- Paystack public-key payment initialization support
-- WhatsApp-assisted booking support
+## Required environment variables
 
-## Local setup
+```env
+VITE_API_BASE_URL=https://api.yourdomain.com/api
+VITE_API_TIMEOUT_MS=20000
+VITE_API_RETRY_COUNT=1
+VITE_HOMELABS_WHATSAPP=233XXXXXXXXX
+```
+
+Only `VITE_` values are exposed to the browser. Never place backend secrets, database URLs, JWT secrets, Paystack secret keys, or private tokens in frontend environment variables.
+
+## Install
 
 ```bash
-npm install
-cp .env.example .env
-npm run dev
+npm ci
 ```
-
-Default local URL:
-
-```txt
-http://localhost:5173
-```
-
-## Environment variables
-
-Create `.env` locally and configure these values:
-
-```env
-VITE_USE_MOCKS=false
-VITE_API_BASE_URL=http://localhost:4000/api
-VITE_PAYSTACK_PUBLIC_KEY=pk_test_or_live_xxxxxxxxx
-VITE_WHATSAPP_NUMBER=233XXXXXXXXX
-```
-
-For Vercel production, set:
-
-```env
-VITE_USE_MOCKS=false
-VITE_API_BASE_URL=https://your-railway-backend-url.up.railway.app/api
-VITE_PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxx
-VITE_WHATSAPP_NUMBER=233XXXXXXXXX
-```
-
-Do not add backend secrets, Paystack secret keys, JWT secrets, or database URLs to this frontend repository.
 
 ## Build
 
@@ -55,32 +31,12 @@ Do not add backend secrets, Paystack secret keys, JWT secrets, or database URLs 
 npm run build
 ```
 
-The production output is generated in:
+## Preview build locally
 
-```txt
-dist/
+```bash
+npm run preview
 ```
 
-`dist/` is ignored and should not be committed.
+## Deployment
 
-## Vercel deployment
-
-1. Push this repository to GitHub as `homelabs-frontend`.
-2. Create a new Vercel project from the GitHub repository.
-3. Framework preset: **Vite**.
-4. Build command: `npm run build`.
-5. Output directory: `dist`.
-6. Add the environment variables above.
-7. Deploy.
-
-This repo includes `vercel.json` so client-side routes such as `/book`, `/track`, and dashboard routes work correctly after deployment.
-
-## Backend connection
-
-This frontend talks to the backend through:
-
-```env
-VITE_API_BASE_URL=https://your-railway-backend-url.up.railway.app/api
-```
-
-The backend must allow the deployed Vercel domain in its `CORS_ORIGINS` environment variable.
+Deploy the generated `dist` folder or use the included hosting configuration for Vercel/Nginx. Ensure `VITE_API_BASE_URL` points to the deployed backend `/api` path before building.

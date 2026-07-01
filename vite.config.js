@@ -10,5 +10,17 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 4173
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('lucide-react')) return 'icons';
+          if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+          return 'vendor';
+        }
+      }
+    }
   }
 });

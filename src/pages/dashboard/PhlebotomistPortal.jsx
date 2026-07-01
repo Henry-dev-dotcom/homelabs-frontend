@@ -102,15 +102,15 @@ function Handover({ assignments, actions }) {
           <div className="form-grid two">
             <Field label="Assignment"><select value={selectedAssignment} onChange={(event) => setSelectedAssignment(event.target.value)}>{assignments.map((item) => <option key={item.id} value={item.id}>{item.bookingId} · {item.patient}</option>)}</select></Field>
             <Field label="Sample ID"><input value={assignment?.sampleId || ''} readOnly /></Field>
-            <Field label="Destination"><select><option>HomeLabs Laboratory</option><option>Kumasi Diagnostics Partner Lab</option><option>Ashanti Medical Laboratory</option></select></Field>
+            <Field label="Destination"><select><option>Assigned laboratory</option><option>Operations dispatch</option><option>Partner laboratory</option></select></Field>
             <Field label="Handover status"><select value={handoverStatus} onChange={(event) => setHandoverStatus(event.target.value)}><option>In Transit to Lab</option><option>Delivered to Lab</option><option>Returned to dispatch</option></select></Field>
             <Field label="Handover note"><textarea placeholder="Handover note" /></Field>
           </div>
           <button className="primary-button full" type="button" disabled={!assignment} onClick={() => actions.handoverSample(assignment.id, handoverStatus)}><Truck size={17} /> Confirm handover</button>
         </div>
         <div className="dashboard-card">
-          <SectionTitle eyebrow="Audit" title="Transport audit trail" text="The backend will store timestamp, staff ID, GPS and sample condition when connected." />
-          <div className="empty-panel"><Truck size={32} /><strong>Transport log placeholder</strong><span>Collection and handover events now update local dashboard state. Backend will make them permanent chain-of-custody records.</span></div>
+          <SectionTitle eyebrow="Audit" title="Transport audit trail" text="The backend stores timestamp, staff ID, GPS and sample condition for auditability." />
+          <div className="empty-panel"><Truck size={32} /><strong>Transport log</strong><span>Collection and handover events are stored as permanent chain-of-custody records in the backend.</span></div>
         </div>
       </section>
     </div>

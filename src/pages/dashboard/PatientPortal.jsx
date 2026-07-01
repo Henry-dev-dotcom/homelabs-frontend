@@ -4,7 +4,7 @@ import { buildTimeline, getBookingProgress } from '../../workflow/bookingWorkflo
 
 export function PatientPortal({ activePage, data }) {
   const { bookings } = data;
-  const selectedBooking = bookings[0];
+  const selectedBooking = bookings[0] || { id: 'No booking selected', tests: ['No tests loaded'], time: 'No appointment loaded', area: 'Area pending', status: 'Pending', lab: 'Laboratory pending', payment: 'Pending', patient: '', phone: '', address: '', phlebotomist: 'Unassigned' };
   if (activePage === 'bookings') return <PatientBookings bookings={bookings} />;
   if (activePage === 'details') return <PatientBookingDetails selectedBooking={selectedBooking} />;
   if (activePage === 'results') return <PatientResults />;
@@ -13,10 +13,10 @@ export function PatientPortal({ activePage, data }) {
   return (
     <div className="dashboard-content">
       <StatsGrid stats={[
-        ['Upcoming visit', '1', 'Next confirmed collection'],
-        ['Results ready', '1', 'Available for download'],
-        ['Paid bookings', '2', 'Confirmed through Paystack/manual'],
-        ['Preferred city', 'Kumasi', 'Launch area']
+        ['Upcoming visit', bookings.length, 'Loaded from backend'],
+        ['Results ready', '0', 'Loaded from backend'],
+        ['Paid bookings', bookings.filter((item) => item.payment === 'Paid').length, 'Confirmed through backend'],
+        ['Portal status', 'Live', 'Production mode']
       ]} />
       <section className="dashboard-grid two-columns">
         <div className="dashboard-card">
@@ -82,13 +82,12 @@ function PatientResults() {
       <section className="dashboard-grid two-columns">
         <div className="dashboard-card">
           <SectionTitle eyebrow="Results" title="Released result documents" text="Direct patient-requested tests can be released to the patient portal." />
-          <MiniRecord title="Pregnancy Test Result" meta="HomeLabs Laboratory · Released yesterday" status="Ready to download" />
-          <MiniRecord title="Full Blood Count" meta="HomeLabs Laboratory · Awaiting admin release" status="Pending" />
-          <button className="primary-button full" type="button"><Download size={17} /> Download result PDF</button>
+          <div className="empty-panel"><FileText size={32} /><strong>No result selected</strong><span>Released results will appear here after backend approval.</span></div>
+          <button className="primary-button full" type="button" disabled><Download size={17} /> Download result PDF</button>
         </div>
         <div className="dashboard-card">
           <SectionTitle eyebrow="Access rule" title="Why some results may not appear immediately" text="Clinician-requested tests may be routed to the clinician first, while patient-requested tests can be released directly to the patient." />
-          <div className="empty-panel"><FileText size={32} /><strong>Secure result delivery placeholder</strong><span>Backend integration will add encrypted file links, audit logs and download history.</span></div>
+          <div className="empty-panel"><FileText size={32} /><strong>Secure result delivery</strong><span>Encrypted file links, audit logs and download history are handled by the backend.</span></div>
         </div>
       </section>
     </div>
@@ -101,11 +100,11 @@ function PatientProfile({ selectedBooking }) {
       <section className="dashboard-card">
         <SectionTitle eyebrow="Profile" title="Patient details" text="Patients can update contact details and default collection address." />
         <div className="form-grid two">
-          <Field label="Full name"><input defaultValue={selectedBooking?.patient || "Ama Serwaa"} /></Field>
-          <Field label="Phone"><input defaultValue={selectedBooking?.phone || "+233 24 000 1122"} /></Field>
-          <Field label="Email"><input defaultValue="ama@example.com" /></Field>
-          <Field label="Default area"><input defaultValue={selectedBooking?.area || "Kumasi Central"} /></Field>
-          <Field label="Default address"><textarea defaultValue={selectedBooking?.address || "Adum, near post office"} /></Field>
+          <Field label="Full name"><input defaultValue={selectedBooking?.patient || ""} /></Field>
+          <Field label="Phone"><input defaultValue={selectedBooking?.phone || ""} /></Field>
+          <Field label="Email"><input placeholder="name@example.com" /></Field>
+          <Field label="Default area"><input defaultValue={selectedBooking?.area || ""} /></Field>
+          <Field label="Default address"><textarea defaultValue={selectedBooking?.address || ""} /></Field>
           <Field label="Notification preference"><select><option>WhatsApp + SMS</option><option>Email only</option><option>SMS only</option></select></Field>
         </div>
         <button className="primary-button full" type="button"><UserRound size={17} /> Save profile</button>

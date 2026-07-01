@@ -41,8 +41,8 @@ const initialForm = {
   prescriptionName: '',
   prescriptionFile: null,
   labChoice: 'homelabs',
-  partnerLabId: 'homelabs-lab',
-  areaId: 'kumasi-central',
+  partnerLabId: '',
+  areaId: '',
   address: '',
   landmark: '',
   facilityType: 'Home',
@@ -80,7 +80,7 @@ export function BookingPage({ onBackHome, onTrack }) {
           partnerLabId: nextOptions.partnerLabs.some((lab) => lab.id === current.partnerLabId) ? current.partnerLabId : nextOptions.partnerLabs[0]?.id || current.partnerLabId
         }));
       })
-      .catch((error) => setSubmitStatus((current) => ({ ...current, error: `Unable to load backend booking options: ${error.message}` })));
+      .catch((error) => setSubmitStatus((current) => ({ ...current, error: `Unable to load booking options: ${error.message}` })));
     return () => { active = false; };
   }, []);
 
@@ -94,11 +94,11 @@ export function BookingPage({ onBackHome, onTrack }) {
     [form.selectedTestIds, tests]
   );
 
-  const selectedArea = serviceAreas.find((area) => area.id === form.areaId) || serviceAreas[0];
-  const selectedPartnerLab = partnerLabs.find((lab) => lab.id === form.partnerLabId) || partnerLabs[0];
+  const selectedArea = serviceAreas.find((area) => area.id === form.areaId) || serviceAreas[0] || { id: '', name: 'Service area unavailable', fee: 0 };
+  const selectedPartnerLab = partnerLabs.find((lab) => lab.id === form.partnerLabId) || partnerLabs[0] || { id: '', name: 'Laboratory unavailable' };
   const testsTotal = selectedTests.reduce((sum, item) => sum + item.price, 0);
   const customReviewFee = form.customTest || form.prescriptionName ? 50 : 0;
-  const total = selectedArea.fee + testsTotal + customReviewFee;
+  const total = Number(selectedArea.fee || 0) + testsTotal + customReviewFee;
   const needsFasting = selectedTests.some((test) => test.fasting);
 
   const filteredTests = useMemo(() => {
@@ -169,8 +169,8 @@ export function BookingPage({ onBackHome, onTrack }) {
       }
 
       setBookingId(createdId);
-      const payload = buildRecentBooking(createdId, form, selectedTests, selectedArea, selectedPartnerLab, total);
-      localStorage.setItem('homelabs_recent_booking', JSON.stringify({ ...payload, paymentUrl, backend: createdBooking.raw || createdBooking }));
+      sessionStorage.setItem('homelabs_recent_booking', JSON.stringify({ id: createdId, paymentUrl }));
+      localStorage.removeItem('homelabs_recent_booking');
       setSubmitStatus({ loading: false, error: '', paymentUrl });
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -191,7 +191,7 @@ export function BookingPage({ onBackHome, onTrack }) {
           <div className="success-icon"><CheckCircle2 size={48} /></div>
           <span>Booking request created</span>
           <h1>HomeLabs will confirm this collection.</h1>
-          <p>Your booking has been prepared for the operations queue. In connected mode, this creates the backend order, uploads the prescription where provided, initializes Paystack when selected, and stores the booking ID for public tracking.</p>
+          <p>Your booking has been submitted to the operations queue. Prescription uploads and Paystack checkout will be handled by the production backend where configured.</p>
           <div className="recent-booking-callout"><strong>{bookingId}</strong><span>Use this booking ID on the public tracking page. {submitStatus.paymentUrl ? 'Paystack checkout has also been prepared.' : 'Payment can be completed or confirmed through operations.'}</span></div>
           <div className="summary-card">
             <h2>Booking summary</h2>
@@ -278,9 +278,9 @@ export function BookingPage({ onBackHome, onTrack }) {
 
           {currentStep.id === 'patient' && (
             <div className="form-grid two">
-              <Field label="Full name"><input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="e.g. Ama Serwaa" /></Field>
+              <Field label="Full name"><input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Patient full name" /></Field>
               <Field label="Phone number"><input value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+233..." /></Field>
-              <Field label="Email address"><input value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="patient@email.com" /></Field>
+              <Field label="Email address"><input value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="name@example.com" /></Field>
               <Field label="Date of birth"><input type="date" value={form.dob} onChange={(e) => update('dob', e.target.value)} /></Field>
               <Field label="Gender"><select value={form.gender} onChange={(e) => update('gender', e.target.value)}><option value="">Select gender</option><option>Female</option><option>Male</option><option>Prefer not to say</option></select></Field>
             </div>
@@ -376,7 +376,7 @@ export function BookingPage({ onBackHome, onTrack }) {
                 <div className="total-row"><span>Total</span><strong>GHS {total.toLocaleString()}</strong></div>
                 <label className="consent-row"><input type="checkbox" checked={form.consent} onChange={(e) => update('consent', e.target.checked)} /> I consent to HomeLabs collecting my details and coordinating this sample collection.</label>
                 <button className="primary-button full" type="button" onClick={submitBooking} disabled={!form.consent || submitStatus.loading}>{submitStatus.loading ? 'Submitting booking...' : 'Continue to Paystack / Submit'}</button>
-                <small>Connected mode calls the backend booking API and initializes Paystack. Mock mode keeps the full workflow inside the browser.</small>
+                <small>Submission uses the production backend API and initializes Paystack when payment is enabled.</small>
               </div>
             </div>
           )}
@@ -431,7 +431,7 @@ function buildApiBookingPayload({ form, selectedTests, selectedArea, selectedPar
     labChoice,
     selectedLabId: labChoice === 'partner' ? selectedPartnerLab.id : selectedPartnerLab.id,
     location: {
-      areaId: selectedArea.id,
+      areaId: selectedArea.id || null,
       address: form.address,
       landmark: form.landmark,
       facilityType: form.facilityType

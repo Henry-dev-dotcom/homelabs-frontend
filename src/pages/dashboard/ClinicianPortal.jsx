@@ -95,13 +95,12 @@ function ResultsInbox({ clinicianRequests }) {
       <section className="dashboard-grid two-columns">
         <div className="dashboard-card">
           <SectionTitle eyebrow="Results" title="Clinician results inbox" text="Clinician-requested results are routed here first by default." />
-          <MiniRecord title="Mavis Asante · Full Blood Count" meta="HomeLabs Laboratory · Ready for review" status="Ready" />
-          <MiniRecord title="Daniel Osei · Kidney Function Test" meta="HomeLabs Laboratory · Lab processing" status="Pending" />
+          <div className="empty-panel"><FileText size={32} /><strong>No result selected</strong><span>Clinician-requested results will appear here after laboratory release.</span></div>
           <button className="primary-button full" type="button"><FileText size={17} /> Open selected result</button>
         </div>
         <div className="dashboard-card">
-          <SectionTitle eyebrow="Patient trends" title="Patient result history" text="Phase 5 can add charts for chronic care monitoring and patient trends." />
-          <div className="empty-panel"><Stethoscope size={32} /><strong>Trend viewer placeholder</strong><span>HbA1c, renal function and lipid profile trends can be displayed after backend data is connected.</span></div>
+          <SectionTitle eyebrow="Patient trends" title="Patient result history" text="Charts can be added for chronic care monitoring and patient trends after production result history is available." />
+          <div className="empty-panel"><Stethoscope size={32} /><strong>Trend viewer</strong><span>HbA1c, renal function and lipid profile trends can be displayed when backend data is available.</span></div>
         </div>
       </section>
     </div>

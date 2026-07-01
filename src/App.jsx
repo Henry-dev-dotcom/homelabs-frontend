@@ -1,16 +1,33 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { PublicFooter } from './components/PublicFooter.jsx';
 import { PublicHeader } from './components/PublicHeader.jsx';
-import { BookingPage } from './pages/BookingPage.jsx';
-import { Dashboard } from './pages/Dashboard.jsx';
-import { HomePage } from './pages/HomePage.jsx';
-import { LoginPage } from './pages/LoginPage.jsx';
-import { PartnerInquiryPage } from './pages/PartnerInquiryPage.jsx';
-import { TrackPage } from './pages/TrackPage.jsx';
+
+const lazyNamed = (loader, exportName) => lazy(() => loader().then((module) => ({ default: module[exportName] })));
+
+const BookingPage = lazyNamed(() => import('./pages/BookingPage.jsx'), 'BookingPage');
+const Dashboard = lazyNamed(() => import('./pages/Dashboard.jsx'), 'Dashboard');
+const HomePage = lazyNamed(() => import('./pages/HomePage.jsx'), 'HomePage');
+const LoginPage = lazyNamed(() => import('./pages/LoginPage.jsx'), 'LoginPage');
+const PartnerInquiryPage = lazyNamed(() => import('./pages/PartnerInquiryPage.jsx'), 'PartnerInquiryPage');
+const TrackPage = lazyNamed(() => import('./pages/TrackPage.jsx'), 'TrackPage');
+
+function RouteLoader({ label = 'Loading page' }) {
+  return (
+    <main className="route-loader" role="status" aria-live="polite">
+      <span className="route-loader__spinner" aria-hidden="true" />
+      <strong>{label}</strong>
+      <small>Preparing only the code needed for this section.</small>
+    </main>
+  );
+}
+
+function LazyRoute({ label, children }) {
+  return <Suspense fallback={<RouteLoader label={label} />}>{children}</Suspense>;
+}
 
 export default function App() {
   const [view, setView] = useState('home');
-  const [role, setRole] = useState('operations');
+  const [role, setRole] = useState('patient');
 
   function goTo(nextView) {
     setView(nextView);
@@ -43,29 +60,51 @@ export default function App() {
   }
 
   if (view === 'booking') {
-    return <BookingPage onBackHome={showHome} onTrack={showTrack} />;
+    return (
+      <LazyRoute label="Loading booking page">
+        <BookingPage onBackHome={showHome} onTrack={showTrack} />
+      </LazyRoute>
+    );
   }
 
   if (view === 'login') {
-    return <LoginPage onBackHome={showHome} onLogin={openDashboard} selectedRole={role} onRoleChange={setRole} />;
+    return (
+      <LazyRoute label="Loading login page">
+        <LoginPage onBackHome={showHome} onLogin={openDashboard} selectedRole={role} onRoleChange={setRole} />
+      </LazyRoute>
+    );
   }
 
   if (view === 'track') {
-    return <TrackPage onBackHome={showHome} onBook={showBooking} onLogin={showLogin} />;
+    return (
+      <LazyRoute label="Loading tracking page">
+        <TrackPage onBackHome={showHome} onBook={showBooking} onLogin={showLogin} />
+      </LazyRoute>
+    );
   }
 
   if (view === 'partner') {
-    return <PartnerInquiryPage onBackHome={showHome} onLogin={showLogin} />;
+    return (
+      <LazyRoute label="Loading partner inquiry page">
+        <PartnerInquiryPage onBackHome={showHome} onLogin={showLogin} />
+      </LazyRoute>
+    );
   }
 
   if (view === 'dashboard') {
-    return <Dashboard role={role} onRoleChange={setRole} onBackHome={showHome} onLogout={showLogin} />;
+    return (
+      <LazyRoute label="Loading dashboard">
+        <Dashboard role={role} onRoleChange={setRole} onBackHome={showHome} onLogout={showLogin} />
+      </LazyRoute>
+    );
   }
 
   return (
     <>
       <PublicHeader onBook={showBooking} onLogin={showLogin} onTrack={showTrack} onPartner={showPartnerInquiry} />
-      <HomePage onBook={showBooking} onLogin={showLogin} onTrack={showTrack} onPartner={showPartnerInquiry} />
+      <LazyRoute label="Loading HomeLabs homepage">
+        <HomePage onBook={showBooking} onLogin={showLogin} onTrack={showTrack} onPartner={showPartnerInquiry} />
+      </LazyRoute>
       <PublicFooter onBook={showBooking} onTrack={showTrack} onPartner={showPartnerInquiry} />
     </>
   );

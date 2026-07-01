@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, MessageCircle, Plus, Route, ShieldCheck, Truck, UserCheck } from 'lucide-react';
-import { Field, MiniRecord, SectionTitle, StatsGrid, StatusBadge } from '../../components/dashboard/DashboardPrimitives.jsx';
+import { Field, MiniRecord, PaginationControls, SectionTitle, StatsGrid, StatusBadge } from '../../components/dashboard/DashboardPrimitives.jsx';
 import { serviceAreas, timeSlots, partnerLabs } from '../../data/homelabsData.js';
 import { getBookingProgress, getNextStatuses } from '../../workflow/bookingWorkflow.js';
 
@@ -105,6 +105,7 @@ function BookingQueue({ compact = false, bookings, staff = [], actions, connecti
             </tbody>
           </table>
         </div>
+        {!compact && <PaginationControls meta={bookings.pagination} label="bookings" onPageChange={(page) => actions.loadBackendPage('bookings', page)} />}
       </section>
     </div>
   );
@@ -208,11 +209,11 @@ function AssignmentBoard({ bookings, assignments, staff = [], actions, connectio
                 title={`${booking.patient} · ${booking.id}`}
                 meta={`${booking.area} · ${booking.time}`}
                 status={booking.status}
-                action={<button className="primary-button tiny" type="button" onClick={() => { const person = staff.find((item) => String(item.role || '').toLowerCase().includes('phlebotomist')) || { name: 'Nana Yeboah' }; actions.assignPhlebotomist(booking.id, person.name, person.id); }}>Assign first available</button>}
+                action={<button className="primary-button tiny" type="button" onClick={() => { const person = staff.find((item) => String(item.role || '').toLowerCase().includes('phlebotomist')) || { name: 'first available phlebotomist' }; actions.assignPhlebotomist(booking.id, person.name, person.id); }}>Assign first available</button>}
               />
             ))}
           </div>
-          <div className="route-card"><Route size={46} /><strong>Central → Asokwa → Ahodwo → Santasi</strong><span>Route planning placeholder for backend map integration.</span></div>
+          <div className="route-card"><Route size={46} /><strong>Route planning</strong><span>Map routing can be connected to a production mapping provider.</span></div>
         </div>
       </section>
     </div>
@@ -235,7 +236,7 @@ function ExceptionsPanel({ bookings, data }) {
           {rejectedSamples.map((sample) => <MiniRecord key={sample.id} title="Sample rejected" meta={`${sample.id} · ${sample.patient} · ${sample.resultStatus}`} status="Sample Rejected" />)}
           {paymentIssues.length === 0 && rejectedSamples.length === 0 && <div className="empty-panel"><ShieldCheck size={28} /><strong>No active payment or sample exceptions.</strong><span>Issues will appear here when triggered from payment, collection or lab workflows.</span></div>}
           <div className="empty-panel"><Clock3 size={28} /><strong>No delayed result yet.</strong><span>Lab turnaround exceptions will appear here when expected TAT is exceeded.</span></div>
-          <div className="empty-panel"><AlertTriangle size={28} /><strong>Exception workflow is frontend-ready.</strong><span>Backend events will make this persistent and auditable.</span></div>
+          <div className="empty-panel"><AlertTriangle size={28} /><strong>Exception workflow</strong><span>Backend events make exceptions persistent and auditable.</span></div>
         </div>
       </section>
     </div>

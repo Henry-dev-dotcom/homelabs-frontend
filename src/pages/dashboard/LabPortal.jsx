@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, FileUp, FlaskConical, Upload } from 'lucide-react';
-import { Field, MiniRecord, SectionTitle, StatsGrid, StatusBadge } from '../../components/dashboard/DashboardPrimitives.jsx';
+import { Field, MiniRecord, PaginationControls, SectionTitle, StatsGrid, StatusBadge } from '../../components/dashboard/DashboardPrimitives.jsx';
 
 
 function ConnectionStrip({ connection, loading }) {
@@ -49,6 +49,7 @@ function IncomingSamples({ labSamples, actions }) {
             <tbody>{labSamples.map((sample) => <tr key={sample.id}><td><strong>{sample.id}</strong><small>{sample.bookingId}</small></td><td>{sample.patient}</td><td>{sample.tests.join(', ')}</td><td>{sample.collectedAt}</td><td>{sample.receivedAt}</td><td><StatusBadge status={sample.status} /></td><td><button className="secondary-button tiny" type="button" disabled={sample.status === 'Processing'} onClick={() => actions.confirmSampleReceipt(sample.id)}>Confirm receipt</button></td></tr>)}</tbody>
           </table>
         </div>
+        <PaginationControls meta={labSamples.pagination} label="samples" onPageChange={(page) => actions.loadBackendPage('samples', page)} />
       </section>
     </div>
   );
@@ -69,6 +70,7 @@ function ProcessingSamples({ labSamples, actions }) {
           </div>
         ))}
       </section>
+      <PaginationControls meta={labSamples.pagination} label="samples" onPageChange={(page) => actions.loadBackendPage('samples', page)} />
     </div>
   );
 }

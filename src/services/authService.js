@@ -1,14 +1,5 @@
 import { roles } from '../data/dashboardData.js';
-import { apiRequest, jsonBody, mockResponse, USE_MOCKS } from './apiClient.js';
-
-export const roleToDemoEmail = {
-  operations: 'operations@homelabs.gh',
-  admin: 'admin@homelabs.gh',
-  patient: 'patient@example.com',
-  clinician: 'clinician@example.com',
-  phlebotomist: 'phlebotomist@homelabs.gh',
-  lab: 'lab@homelabs.gh'
-};
+import { apiRequest, jsonBody } from './apiClient.js';
 
 export function roleToApiRole(role) {
   const map = {
@@ -19,7 +10,7 @@ export function roleToApiRole(role) {
     phlebotomist: 'PHLEBOTOMIST',
     lab: 'HOMELABS_LAB_STAFF'
   };
-  return map[role] || String(role || 'operations').toUpperCase();
+  return map[role] || String(role || 'patient').toUpperCase();
 }
 
 export function apiRoleToClientRole(role) {
@@ -45,51 +36,55 @@ export function apiRoleToClientRole(role) {
   return map[upper] || 'patient';
 }
 
-export async function login({ email, password = 'password123', role }) {
-  const selectedRole = roles.find((item) => item.id === role) || roles[0];
-
-  if (!USE_MOCKS) {
-    const result = await apiRequest('/auth/login', {
-      method: 'POST',
-      ...jsonBody({
-        email: email || roleToDemoEmail[selectedRole.id],
-        password,
-        role: roleToApiRole(selectedRole.id)
-      })
-    });
-    localStorage.setItem('homelabs_token', result.token);
-    localStorage.setItem('homelabs_user', JSON.stringify(result.user));
-    return {
-      ...result,
-      user: {
-        ...result.user,
-        role: apiRoleToClientRole(result.user.role)
-      }
-    };
-  }
-
-  localStorage.setItem('homelabs_token', 'mock-homelabs-token');
-  const user = {
-    id: `USER-${selectedRole.id.toUpperCase()}`,
-    name: selectedRole.name,
-    email: email || roleToDemoEmail[selectedRole.id] || `${selectedRole.id}@homelabs.gh`,
-    role: selectedRole.id
+function storeAuthResult(result) {
+  sessionStorage.removeItem('homelabs_token');
+  sessionStorage.removeItem('homelabs_user');
+  localStorage.removeItem('homelabs_token');
+  localStorage.removeItem('homelabs_user');
+  sessionStorage.setItem('homelabs_token', result.token);
+  sessionStorage.setItem('homelabs_user', JSON.stringify(result.user));
+  return {
+    ...result,
+    user: {
+      ...result.user,
+      role: apiRoleToClientRole(result.user.role)
+    }
   };
-  localStorage.setItem('homelabs_user', JSON.stringify(user));
-  return mockResponse({ token: 'mock-homelabs-token', user });
+}
+
+export async function login({ email, password, role }) {
+  const selectedRole = roles.find((item) => item.id === role) || roles.find((item) => item.id === 'patient') || roles[0];
+  const result = await apiRequest('/auth/login', {
+    method: 'POST',
+    ...jsonBody({
+      email,
+      password,
+      role: roleToApiRole(selectedRole.id)
+    })
+  });
+  return storeAuthResult(result);
+}
+
+export async function googleLogin({ credential, role }) {
+  const selectedRole = roles.find((item) => item.id === role) || roles.find((item) => item.id === 'patient') || roles[0];
+  const result = await apiRequest('/auth/google', {
+    method: 'POST',
+    ...jsonBody({
+      credential,
+      role: roleToApiRole(selectedRole.id)
+    })
+  });
+  return storeAuthResult(result);
 }
 
 export function logout() {
+  sessionStorage.removeItem('homelabs_token');
+  sessionStorage.removeItem('homelabs_user');
   localStorage.removeItem('homelabs_token');
   localStorage.removeItem('homelabs_user');
 }
 
-export async function getSession(role = 'operations') {
-  if (!USE_MOCKS) {
-    const result = await apiRequest('/auth/me');
-    return { authenticated: true, role: apiRoleToClientRole(result.user.role), name: result.user.name, user: result.user };
-  }
-
-  const selectedRole = roles.find((item) => item.id === role) || roles[0];
-  return mockResponse({ authenticated: true, role: selectedRole.id, name: selectedRole.name });
+export async function getSession() {
+  const result = await apiRequest('/auth/me');
+  return { authenticated: true, role: apiRoleToClientRole(result.user.role), name: result.user.name, user: result.user };
 }

@@ -1,11 +1,17 @@
-import { mockResponse } from './apiClient.js';
+import { apiRequest, jsonBody } from './apiClient.js';
 
-export async function sendBookingConfirmation({ bookingId, channel = 'sms' }) {
-  return mockResponse({ bookingId, channel, status: 'Queued' });
+export async function sendBookingConfirmation({ bookingId, channel = 'sms', recipient }) {
+  return apiRequest('/notifications/booking-confirmation', {
+    method: 'POST',
+    ...jsonBody({ bookingId, channel, recipient })
+  });
 }
 
-export async function sendPrepInstructions({ bookingId, fastingRequired }) {
-  return mockResponse({ bookingId, fastingRequired, status: 'Queued' });
+export async function sendPrepInstructions({ bookingId, fastingRequired, channel = 'sms', recipient }) {
+  return apiRequest('/notifications/prep-instructions', {
+    method: 'POST',
+    ...jsonBody({ bookingId, fastingRequired, channel, recipient })
+  });
 }
 
 export function buildWhatsAppBookingUrl(message) {

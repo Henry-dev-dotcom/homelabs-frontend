@@ -1,22 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { DashboardLayout, getFirstSectionForRole } from '../layouts/DashboardLayout.jsx';
-import { OperationsDashboard } from './dashboard/OperationsDashboard.jsx';
-import { AdminDashboard } from './dashboard/AdminDashboard.jsx';
-import { PatientPortal } from './dashboard/PatientPortal.jsx';
-import { ClinicianPortal } from './dashboard/ClinicianPortal.jsx';
-import { PhlebotomistPortal } from './dashboard/PhlebotomistPortal.jsx';
-import { LabPortal } from './dashboard/LabPortal.jsx';
-import {
-  assignments as seedAssignments,
-  bookings as seedBookings,
-  clinicianRequests as seedClinicianRequests,
-  labSamples as seedLabSamples,
-  paymentRecords as seedPaymentRecords,
-  staff as seedStaff
-} from '../data/dashboardData.js';
 import { serviceAreas } from '../data/homelabsData.js';
 import { getNextStatuses } from '../workflow/bookingWorkflow.js';
-import { USE_MOCKS } from '../services/apiClient.js';
+import { attachPagination, paginationFrom, LOCAL_DATA_MODE } from '../services/apiClient.js';
 import { createBooking, listBookings, updateBookingStatus } from '../services/bookingService.js';
 import { recordManualPayment, listPayments } from '../services/paymentService.js';
 import { confirmSampleReceipt as apiConfirmSampleReceipt, listAcceptedSamples, listIncomingSamples, markSampleProcessing as apiMarkSampleProcessing, rejectSample as apiRejectSample } from '../services/labService.js';
@@ -29,6 +15,25 @@ import {
   submitSampleHandover,
   updateAssignmentStatus as apiUpdateAssignmentStatus
 } from '../services/assignmentService.js';
+
+const lazyNamed = (loader, exportName) => lazy(() => loader().then((module) => ({ default: module[exportName] })));
+
+const OperationsDashboard = lazyNamed(() => import('./dashboard/OperationsDashboard.jsx'), 'OperationsDashboard');
+const AdminDashboard = lazyNamed(() => import('./dashboard/AdminDashboard.jsx'), 'AdminDashboard');
+const PatientPortal = lazyNamed(() => import('./dashboard/PatientPortal.jsx'), 'PatientPortal');
+const ClinicianPortal = lazyNamed(() => import('./dashboard/ClinicianPortal.jsx'), 'ClinicianPortal');
+const PhlebotomistPortal = lazyNamed(() => import('./dashboard/PhlebotomistPortal.jsx'), 'PhlebotomistPortal');
+const LabPortal = lazyNamed(() => import('./dashboard/LabPortal.jsx'), 'LabPortal');
+
+function PortalLoader({ role }) {
+  return (
+    <section className="dashboard-portal-loader" role="status" aria-live="polite">
+      <span className="route-loader__spinner" aria-hidden="true" />
+      <strong>Loading {role} portal</strong>
+      <small>Opening this dashboard section without loading every role portal upfront.</small>
+    </section>
+  );
+}
 
 function buildSampleId() {
   return `SMP-${Math.floor(94000 + Math.random() * 900)}`;
@@ -43,16 +48,32 @@ function nowLabel() {
   return new Date().toLocaleString();
 }
 
-function mergeById(items) {
+function mergeById(...collections) {
   const map = new Map();
-  items.filter(Boolean).forEach((item) => map.set(item.id, { ...(map.get(item.id) || {}), ...item }));
-  return [...map.values()];
+  collections.flat().filter(Boolean).forEach((item) => map.set(item.id, { ...(map.get(item.id) || {}), ...item }));
+  const merged = [...map.values()];
+  const metas = collections.map(paginationFrom).filter((meta) => meta.total || meta.totalPages);
+
+  if (!metas.length) return attachPagination(merged);
+
+  return attachPagination(merged, {
+    page: Math.min(...metas.map((meta) => meta.page || 1)),
+    limit: metas.reduce((sum, meta) => sum + Number(meta.limit || 0), 0),
+    total: metas.reduce((sum, meta) => sum + Number(meta.total || 0), 0),
+    totalPages: Math.max(...metas.map((meta) => meta.totalPages || 0)),
+    hasPreviousPage: metas.some((meta) => meta.hasPreviousPage),
+    hasNextPage: metas.some((meta) => meta.hasNextPage)
+  });
 }
 
 function upsertById(items, nextItem) {
   if (!nextItem?.id) return items;
   const exists = items.some((item) => item.id === nextItem.id);
   return exists ? items.map((item) => (item.id === nextItem.id ? { ...item, ...nextItem } : item)) : [nextItem, ...items];
+}
+
+function normalisePaymentRecords(records) {
+  return attachPagination(records.map(normalisePaymentRecord), paginationFrom(records));
 }
 
 function normalisePaymentRecord(record) {
@@ -82,62 +103,42 @@ function releaseRuleToApi(rule = '') {
   return 'PATIENT';
 }
 
-const DASHBOARD_STORAGE_KEY = 'homelabs_dashboard_demo_state_v10';
 const initialActivityLog = [
-  'Phase 10 ready: dashboard actions can now call backend APIs when VITE_USE_MOCKS=false.'
+  'Production dashboard ready. Backend data will appear after login and API connection.'
 ];
-
-function loadPersistedDashboardState() {
-  if (typeof window === 'undefined' || !USE_MOCKS) return null;
-  try {
-    const raw = window.localStorage.getItem(DASHBOARD_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (error) {
-    console.warn('Unable to read HomeLabs dashboard demo state', error);
-    return null;
-  }
-}
-
-const persistedDashboardState = loadPersistedDashboardState();
 
 export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
   const [activePage, setActivePage] = useState(getFirstSectionForRole(role));
-  const [bookings, setBookings] = useState(persistedDashboardState?.bookings || seedBookings);
-  const [assignments, setAssignments] = useState(persistedDashboardState?.assignments || seedAssignments);
-  const [labSamples, setLabSamples] = useState(persistedDashboardState?.labSamples || seedLabSamples);
-  const [paymentRecords, setPaymentRecords] = useState(persistedDashboardState?.paymentRecords || seedPaymentRecords);
-  const [staff, setStaff] = useState(persistedDashboardState?.staff || seedStaff);
-  const [clinicianRequests, setClinicianRequests] = useState(persistedDashboardState?.clinicianRequests || seedClinicianRequests);
-  const [activityLog, setActivityLog] = useState(persistedDashboardState?.activityLog || initialActivityLog);
-  const [connectionNotice, setConnectionNotice] = useState(USE_MOCKS ? 'Mock/demo mode is active.' : 'Connected mode: attempting to use backend APIs.');
+  const [bookings, setBookings] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [labSamples, setLabSamples] = useState([]);
+  const [paymentRecords, setPaymentRecords] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [clinicianRequests, setClinicianRequests] = useState([]);
+  const [activityLog, setActivityLog] = useState(initialActivityLog);
+  const [connectionNotice, setConnectionNotice] = useState('Connecting to backend APIs.');
   const [loadingDashboard, setLoadingDashboard] = useState(false);
 
   useEffect(() => {
     setActivePage(getFirstSectionForRole(role));
   }, [role]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !USE_MOCKS) return;
-    const snapshot = { bookings, assignments, labSamples, paymentRecords, staff, clinicianRequests, activityLog };
-    window.localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(snapshot));
-  }, [bookings, assignments, labSamples, paymentRecords, staff, clinicianRequests, activityLog]);
 
   useEffect(() => {
-    if (USE_MOCKS) return;
     let alive = true;
 
     async function loadBackendState() {
       setLoadingDashboard(true);
       try {
         const requests = [
-          listBookings().then((items) => ({ key: 'bookings', items })).catch((error) => ({ key: 'bookingsError', error })),
-          listAvailablePhlebotomists().then((items) => ({ key: 'staff', items })).catch((error) => ({ key: 'staffError', error })),
-          listPayments().then((items) => ({ key: 'payments', items })).catch((error) => ({ key: 'paymentsError', error })),
-          Promise.all([listIncomingSamples(), listAcceptedSamples()]).then(([incoming, accepted]) => ({ key: 'samples', items: mergeById([...incoming, ...accepted]) })).catch((error) => ({ key: 'samplesError', error }))
+          listBookings({ page: 1, limit: 20 }).then((items) => ({ key: 'bookings', items })).catch((error) => ({ key: 'bookingsError', error })),
+          listAvailablePhlebotomists({ page: 1, limit: 50 }).then((items) => ({ key: 'staff', items })).catch((error) => ({ key: 'staffError', error })),
+          listPayments({ page: 1, limit: 20 }).then((items) => ({ key: 'payments', items })).catch((error) => ({ key: 'paymentsError', error })),
+          Promise.all([listIncomingSamples({ page: 1, limit: 20 }), listAcceptedSamples({ page: 1, limit: 20 })]).then(([incoming, accepted]) => ({ key: 'samples', items: mergeById(incoming, accepted) })).catch((error) => ({ key: 'samplesError', error }))
         ];
 
         if (role === 'phlebotomist') {
-          requests.push(listMyTodayAssignments().then((items) => ({ key: 'assignments', items })).catch((error) => ({ key: 'assignmentsError', error })));
+          requests.push(listMyTodayAssignments({ page: 1, limit: 20 }).then((items) => ({ key: 'assignments', items })).catch((error) => ({ key: 'assignmentsError', error })));
         }
 
         const results = await Promise.all(requests);
@@ -147,7 +148,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
         results.forEach((result) => {
           if (result.key === 'bookings') setBookings(result.items);
           if (result.key === 'staff') setStaff(result.items);
-          if (result.key === 'payments') setPaymentRecords(result.items.map(normalisePaymentRecord));
+          if (result.key === 'payments') setPaymentRecords(normalisePaymentRecords(result.items));
           if (result.key === 'samples') setLabSamples(result.items);
           if (result.key === 'assignments') setAssignments(result.items);
           if (result.error) failures.push(result.error.message);
@@ -177,15 +178,9 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     addActivity(message);
   }
 
-  function resetDemoState() {
-    setBookings(seedBookings);
-    setAssignments(seedAssignments);
-    setLabSamples(seedLabSamples);
-    setPaymentRecords(seedPaymentRecords);
-    setStaff(seedStaff);
-    setClinicianRequests(seedClinicianRequests);
-    setActivityLog(['Demo state reset to the Phase 1–10 baseline.']);
-    if (typeof window !== 'undefined') window.localStorage.removeItem(DASHBOARD_STORAGE_KEY);
+  function refreshDashboardState() {
+    setConnectionNotice('Refreshing backend data.');
+    setActivityLog((items) => ['Backend refresh requested.', ...items].slice(0, 10));
   }
 
   function updateBooking(id, patch) {
@@ -199,7 +194,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     if (!nextStatus) return;
 
     try {
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         const updated = await updateBookingStatus(booking.internalId || booking.id, nextStatus);
         updateBooking(booking.id, updated);
       } else {
@@ -214,7 +209,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
   async function setBookingStatus(id, status) {
     const booking = bookings.find((item) => item.id === id || item.internalId === id);
     try {
-      if (!USE_MOCKS && booking) {
+      if (!LOCAL_DATA_MODE && booking) {
         const updated = await updateBookingStatus(booking.internalId || booking.id, status);
         updateBooking(booking.id, updated);
       } else {
@@ -231,7 +226,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     if (!booking) return;
 
     try {
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         await recordManualPayment({ bookingId: booking.internalId || booking.id, status: 'PAID', notes: 'Confirmed from HomeLabs operations dashboard.' });
       }
       updateBooking(booking.id, { payment: 'Paid' });
@@ -259,8 +254,8 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sampleId = booking.sampleId || buildSampleId();
 
     try {
-      if (!USE_MOCKS) {
-        if (!selectedStaff.id) throw new Error('No backend phlebotomist ID was selected. Reload staff list or use a seeded phlebotomist account.');
+      if (!LOCAL_DATA_MODE) {
+        if (!selectedStaff.id) throw new Error('No backend phlebotomist ID was selected. Reload staff list or create a production phlebotomist account.');
         const assignment = await apiCreateAssignment({
           bookingId: booking.internalId || booking.id,
           phlebotomistId: selectedStaff.id,
@@ -314,11 +309,11 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
       payment: payload.payment || 'Pending',
       amount: Number(payload.amount || 0),
       phlebotomist: 'Unassigned',
-      priority: payload.priority || 'WhatsApp assisted booking'
+      priority: payload.priority || 'Operations assisted booking'
     };
 
     try {
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         const created = await createBooking({
           source: 'whatsapp',
           patient: {
@@ -348,15 +343,15 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
           paymentMethod: payload.payment === 'Institution billed' ? 'institution_billing' : 'manual'
         });
         setBookings((items) => [created, ...items]);
-        addActivity(`${created.id} created from WhatsApp/manual booking and saved to backend.`);
+        addActivity(`${created.id} created from manual booking and saved to backend.`);
         return created.id;
       }
 
       setBookings((items) => [localBooking, ...items]);
-      addActivity(`${localId} created from WhatsApp/manual booking.`);
+      addActivity(`${localId} created from manual booking.`);
       return localId;
     } catch (error) {
-      addErrorActivity('WhatsApp/manual booking', error);
+      addErrorActivity('manual booking', error);
       return '';
     }
   }
@@ -366,7 +361,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     if (!assignment) return;
 
     try {
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         await apiUpdateAssignmentStatus(id, status, `Updated from field portal at ${nowLabel()}`);
       }
       setAssignments((items) => items.map((item) => (item.id === id ? { ...item, status } : item)));
@@ -383,10 +378,10 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
 
     try {
       let backendSample = null;
-      if (!USE_MOCKS && status === 'Sample Collected') {
+      if (!LOCAL_DATA_MODE && status === 'Sample Collected') {
         backendSample = await submitCollectionChecklist(id, { sampleCode: assignment.sampleId, location: assignment.location, notes: 'Collected through HomeLabs field checklist.' });
       }
-      if (!USE_MOCKS && status === 'Delivered to Lab') {
+      if (!LOCAL_DATA_MODE && status === 'Delivered to Lab') {
         backendSample = await submitSampleHandover(id, { destination: 'Assigned laboratory', location: assignment.location });
       }
 
@@ -404,10 +399,10 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
             patient: assignment.patient,
             tests: booking?.tests || assignment.tests || ['Pending test detail'],
             lab: booking?.lab || 'HomeLabs Laboratory',
-            status: !USE_MOCKS ? 'In Transit' : 'Received',
+            status: !LOCAL_DATA_MODE ? 'In Transit' : 'Received',
             collectedAt: 'Just now',
-            receivedAt: !USE_MOCKS ? 'Awaiting lab receipt' : 'Just now',
-            resultStatus: !USE_MOCKS ? 'Awaiting lab receipt' : 'Awaiting processing'
+            receivedAt: !LOCAL_DATA_MODE ? 'Awaiting lab receipt' : 'Just now',
+            resultStatus: !LOCAL_DATA_MODE ? 'Awaiting lab receipt' : 'Awaiting processing'
           };
           return upsertById(samples, next);
         });
@@ -422,7 +417,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sample = labSamples.find((item) => item.id === sampleId || item.internalId === sampleId);
     try {
       let updated = null;
-      if (!USE_MOCKS) updated = await apiConfirmSampleReceipt(sample?.internalId || sampleId);
+      if (!LOCAL_DATA_MODE) updated = await apiConfirmSampleReceipt(sample?.internalId || sampleId);
       const next = updated || { ...sample, id: sampleId, status: 'Received', receivedAt: sample?.receivedAt || 'Just now', resultStatus: 'Awaiting processing' };
       setLabSamples((samples) => upsertById(samples, { ...sample, ...next, status: updated?.status || 'Received', resultStatus: updated?.resultStatus || 'Awaiting processing' }));
       if (sample?.bookingId) updateBooking(sample.bookingId, { status: 'Delivered to Lab' });
@@ -436,7 +431,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sample = labSamples.find((item) => item.id === sampleId || item.internalId === sampleId);
     try {
       let updated = null;
-      if (!USE_MOCKS) updated = await apiMarkSampleProcessing(sample?.internalId || sampleId);
+      if (!LOCAL_DATA_MODE) updated = await apiMarkSampleProcessing(sample?.internalId || sampleId);
       setLabSamples((samples) => upsertById(samples, { ...sample, ...(updated || {}), status: 'Processing', resultStatus: 'Processing' }));
       if (sample?.bookingId) updateBooking(sample.bookingId, { status: 'Lab Processing' });
       addActivity(`${sampleId} moved to lab processing.`);
@@ -449,7 +444,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sample = labSamples.find((item) => item.id === sampleId || item.internalId === sampleId);
     try {
       let result = null;
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         result = await apiUploadResult({
           sampleId: sample?.internalId || sampleId,
           notes: `Result marked ready from dashboard. Release rule: ${releaseRule}`,
@@ -470,7 +465,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sample = labSamples.find((item) => item.id === sampleId || item.internalId === sampleId);
     try {
       let resultId = sample?.resultId;
-      if (!USE_MOCKS) {
+      if (!LOCAL_DATA_MODE) {
         if (!resultId) {
           const prepared = await apiUploadResult({ sampleId: sample?.internalId || sampleId, notes: 'Prepared for release from quick action.', releaseTo: 'PATIENT' });
           resultId = prepared.id;
@@ -489,7 +484,7 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     const sample = labSamples.find((item) => item.id === sampleId || item.internalId === sampleId);
     try {
       let updated = null;
-      if (!USE_MOCKS) updated = await apiRejectSample(sample?.internalId || sampleId, reason || 'Rejected');
+      if (!LOCAL_DATA_MODE) updated = await apiRejectSample(sample?.internalId || sampleId, reason || 'Rejected');
       setLabSamples((samples) => upsertById(samples, { ...sample, ...(updated || {}), id: sampleId, status: 'Sample Rejected', resultStatus: reason || 'Rejected' }));
       if (sample?.bookingId) updateBooking(sample.bookingId, { status: 'Sample Rejected' });
       addActivity(`${sampleId} rejected: ${reason || 'Reason not specified'}.`);
@@ -498,21 +493,45 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     }
   }
 
+  async function loadBackendPage(collection, page) {
+    if (LOCAL_DATA_MODE) return;
+    const requestedPage = Math.max(Number(page || 1), 1);
+    setLoadingDashboard(true);
+    try {
+      if (collection === 'bookings') {
+        const items = await listBookings({ page: requestedPage, limit: 20 });
+        setBookings(items);
+      }
+      if (collection === 'payments') {
+        const items = await listPayments({ page: requestedPage, limit: 20 });
+        setPaymentRecords(normalisePaymentRecords(items));
+      }
+      if (collection === 'staff') {
+        const items = await listAvailablePhlebotomists({ page: requestedPage, limit: 50 });
+        setStaff(items);
+      }
+      if (collection === 'samples') {
+        const [incoming, accepted] = await Promise.all([
+          listIncomingSamples({ page: requestedPage, limit: 20 }),
+          listAcceptedSamples({ page: requestedPage, limit: 20 })
+        ]);
+        setLabSamples(mergeById(incoming, accepted));
+      }
+      setConnectionNotice(`Loaded ${collection} page ${requestedPage} from backend.`);
+    } catch (error) {
+      addErrorActivity(`Load ${collection} page ${requestedPage}`, error);
+    } finally {
+      setLoadingDashboard(false);
+    }
+  }
+
   async function createClinicianRequest(payload) {
-    const request = {
-      id: `CLR-${800 + clinicianRequests.length + 1}`,
-      patient: payload.patient || 'New Patient',
-      tests: [payload.test || 'Clinician selected test'],
-      clinician: 'Dr. K. Owusu',
-      status: 'Submitted',
-      result: 'Pending',
-      created: 'Just now'
-    };
-    setClinicianRequests((items) => [request, ...items]);
-    await createManualBooking({
-      patient: request.patient,
+    const patientName = payload.patient || 'New Patient';
+    const requestedTest = payload.test || 'Clinician selected test';
+    const bookingId = await createManualBooking({
+      patient: patientName,
       phone: payload.phone,
-      tests: request.tests[0],
+      tests: requestedTest,
       lab: payload.lab,
       area: 'Patient confirmation pending',
       address: 'Patient confirmation pending',
@@ -521,7 +540,20 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
       amount: 0,
       priority: 'Clinician request'
     });
-    addActivity(`${request.id} clinician request created and sent for patient confirmation.`);
+
+    if (!bookingId) return;
+
+    const request = {
+      id: bookingId,
+      patient: patientName,
+      tests: [requestedTest],
+      clinician: 'Current clinician',
+      status: 'Submitted',
+      result: 'Pending',
+      created: 'Just now'
+    };
+    setClinicianRequests((items) => [request, ...items]);
+    addActivity(`${bookingId} clinician request created and sent for patient confirmation.`);
   }
 
   const data = useMemo(() => ({
@@ -532,10 +564,10 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     staff,
     clinicianRequests,
     activityLog,
-    persisted: Boolean(persistedDashboardState),
+    persisted: false,
     loadingDashboard,
     connection: {
-      mode: USE_MOCKS ? 'Mock demo' : 'Backend connected',
+      mode: 'Backend connected',
       notice: connectionNotice
     }
   }), [bookings, assignments, labSamples, paymentRecords, staff, clinicianRequests, activityLog, loadingDashboard, connectionNotice]);
@@ -554,7 +586,8 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
     releaseResult,
     rejectSample,
     createClinicianRequest,
-    resetDemoState
+    loadBackendPage,
+    refreshDashboardState
   };
 
   function renderPortal() {
@@ -584,7 +617,9 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
       onBackHome={onBackHome}
       onLogout={onLogout}
     >
-      {renderPortal()}
+      <Suspense fallback={<PortalLoader role={role} />}>
+        {renderPortal()}
+      </Suspense>
     </DashboardLayout>
   );
 }
