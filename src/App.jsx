@@ -1,10 +1,10 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { PublicFooter } from './components/PublicFooter.jsx';
 import { PublicHeader } from './components/PublicHeader.jsx';
+import { getSession, getStoredUser, logout as clearSession } from './services/authService.js';
 
 const lazyNamed = (loader, exportName) => lazy(() => loader().then((module) => ({ default: module[exportName] })));
 
-const BookingPage = lazyNamed(() => import('./pages/BookingPage.jsx'), 'BookingPage');
 const Dashboard = lazyNamed(() => import('./pages/Dashboard.jsx'), 'Dashboard');
 const HomePage = lazyNamed(() => import('./pages/HomePage.jsx'), 'HomePage');
 const LoginPage = lazyNamed(() => import('./pages/LoginPage.jsx'), 'LoginPage');
@@ -27,22 +27,42 @@ function LazyRoute({ label, children }) {
 
 export default function App() {
   const [view, setView] = useState('home');
-  const [role, setRole] = useState('patient');
+  const [user, setUser] = useState(() => getStoredUser());
+  const [bookingIntent, setBookingIntent] = useState(false);
+  const [authMode, setAuthMode] = useState('signin');
+
+  // Silently verify a restored session; clear it if the token is stale.
+  useEffect(() => {
+    if (!getStoredUser()) return;
+    getSession()
+      .then((session) => setUser({ ...session.user, role: session.role }))
+      .catch((error) => {
+        // Only drop the session when the backend explicitly rejects the
+        // token — a flaky network should not log the patient out.
+        if (error?.status === 401 || error?.status === 403) {
+          clearSession();
+          setUser(null);
+        }
+      });
+  }, []);
 
   function goTo(nextView) {
     setView(nextView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function showBooking() {
-    goTo('booking');
-  }
-
   function showHome() {
+    setBookingIntent(false);
     goTo('home');
   }
 
   function showLogin() {
+    setAuthMode('signin');
+    goTo('login');
+  }
+
+  function showSignup() {
+    setAuthMode('signup');
     goTo('login');
   }
 
@@ -54,23 +74,35 @@ export default function App() {
     goTo('partner');
   }
 
-  function openDashboard(selectedRole = role) {
-    setRole(selectedRole);
+  // Booking now lives inside the patient portal. Guests are sent to
+  // sign in / sign up first, then land directly on the booking section.
+  function showBooking() {
+    if (user) {
+      setBookingIntent(user.role === 'patient');
+      goTo('dashboard');
+      return;
+    }
+    setBookingIntent(true);
+    setAuthMode('signup');
+    goTo('login');
+  }
+
+  function handleLogin(role, loggedInUser) {
+    setUser({ ...(loggedInUser || {}), role });
     goTo('dashboard');
   }
 
-  if (view === 'booking') {
-    return (
-      <LazyRoute label="Loading booking page">
-        <BookingPage onBackHome={showHome} onTrack={showTrack} />
-      </LazyRoute>
-    );
+  function handleLogout() {
+    clearSession();
+    setUser(null);
+    setBookingIntent(false);
+    goTo('login');
   }
 
   if (view === 'login') {
     return (
       <LazyRoute label="Loading login page">
-        <LoginPage onBackHome={showHome} onLogin={openDashboard} selectedRole={role} onRoleChange={setRole} />
+        <LoginPage onBackHome={showHome} onLogin={handleLogin} initialMode={authMode} />
       </LazyRoute>
     );
   }
@@ -91,17 +123,23 @@ export default function App() {
     );
   }
 
-  if (view === 'dashboard') {
+  if (view === 'dashboard' && user) {
     return (
       <LazyRoute label="Loading dashboard">
-        <Dashboard role={role} onRoleChange={setRole} onBackHome={showHome} onLogout={showLogin} />
+        <Dashboard
+          role={user.role}
+          user={user}
+          initialSection={bookingIntent && user.role === 'patient' ? 'book' : undefined}
+          onBackHome={showHome}
+          onLogout={handleLogout}
+        />
       </LazyRoute>
     );
   }
 
   return (
     <>
-      <PublicHeader onBook={showBooking} onLogin={showLogin} onTrack={showTrack} onPartner={showPartnerInquiry} />
+      <PublicHeader onBook={showBooking} onLogin={showLogin} onSignup={showSignup} onTrack={showTrack} onPartner={showPartnerInquiry} />
       <LazyRoute label="Loading HomeLabs homepage">
         <HomePage onBook={showBooking} onLogin={showLogin} onTrack={showTrack} onPartner={showPartnerInquiry} />
       </LazyRoute>

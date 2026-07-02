@@ -55,9 +55,14 @@ const initialForm = {
   consent: false
 };
 
-export function BookingPage({ onBackHome, onTrack }) {
+export function BookingPage({ onBackHome, onTrack, embedded = false, initialPatient = null, onBooked }) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    fullName: initialPatient?.fullName || initialForm.fullName,
+    phone: initialPatient?.phone || initialForm.phone,
+    email: initialPatient?.email || initialForm.email
+  }));
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [searchOpen, setSearchOpen] = useState(false);
@@ -205,6 +210,7 @@ export function BookingPage({ onBackHome, onTrack }) {
       localStorage.removeItem('homelabs_recent_booking');
       setSubmitStatus({ loading: false, error: '', paymentUrl });
       setSubmitted(true);
+      if (onBooked) onBooked(createdId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       setSubmitStatus({ loading: false, error: error.message || 'Booking submission failed.', paymentUrl: '' });
@@ -218,7 +224,7 @@ export function BookingPage({ onBackHome, onTrack }) {
 
   if (submitted) {
     return (
-      <main className="booking-page">
+      <main className={embedded ? 'booking-page embedded' : 'booking-page'}>
         <section className="booking-success container">
           <div className="success-icon"><CheckCircle2 size={48} /></div>
           <span>Booking request created</span>
@@ -241,7 +247,7 @@ export function BookingPage({ onBackHome, onTrack }) {
             <button className="primary-button" type="button" onClick={() => { setSubmitted(false); setForm(initialForm); setStepIndex(0); }}>Create another booking</button>
             {onTrack && <button className="secondary-button" type="button" onClick={onTrack}>Track booking</button>}
             {submitStatus.paymentUrl && <a className="secondary-button" href={submitStatus.paymentUrl} target="_blank" rel="noreferrer">Open Paystack checkout</a>}
-            <button className="secondary-button" type="button" onClick={onBackHome}>Back to website</button>
+            <button className="secondary-button" type="button" onClick={onBackHome}>{embedded ? 'Back to overview' : 'Back to website'}</button>
           </div>
         </section>
       </main>
@@ -249,18 +255,20 @@ export function BookingPage({ onBackHome, onTrack }) {
   }
 
   return (
-    <main className="booking-page">
-      <section className="booking-hero">
-        <div className="container booking-hero-inner">
-          <button className="ghost-button" type="button" onClick={onBackHome}><ArrowLeft size={17} /> Back to website</button>
-          <div>
-            <span>Patient booking</span>
-            <h1>Book a Home Lab Visit</h1>
-            <p>Complete the request below. Patients can choose HomeLabs Laboratory, choose a partner lab, or let HomeLabs recommend a lab.</p>
+    <main className={embedded ? 'booking-page embedded' : 'booking-page'}>
+      {!embedded && (
+        <section className="booking-hero">
+          <div className="container booking-hero-inner">
+            <button className="ghost-button" type="button" onClick={onBackHome}><ArrowLeft size={17} /> Back to website</button>
+            <div>
+              <span>Patient booking</span>
+              <h1>Book a Home Lab Visit</h1>
+              <p>Complete the request below. Patients can choose HomeLabs Laboratory, choose a partner lab, or let HomeLabs recommend a lab.</p>
+            </div>
+            <a className="whatsapp-button dark" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Book on WhatsApp</a>
           </div>
-          <a className="whatsapp-button dark" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Book on WhatsApp</a>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="container booking-shell">
         <aside className="booking-sidebar">

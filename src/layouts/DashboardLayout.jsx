@@ -42,6 +42,7 @@ export const sidebarItems = {
   ],
   patient: [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'book', label: 'Book a Visit', icon: Plus },
     { id: 'bookings', label: 'My Bookings', icon: CalendarClock },
     { id: 'details', label: 'Booking Details', icon: ClipboardCheck },
     { id: 'results', label: 'Results', icon: FileText },
@@ -82,7 +83,7 @@ export function getFirstSectionForRole(role) {
   return sidebarItems[role]?.[0]?.id || 'overview';
 }
 
-export function DashboardLayout({ role, activePage, onActivePageChange, onRoleChange, onBackHome, onLogout, children }) {
+export function DashboardLayout({ role, activePage, onActivePageChange, onBackHome, onLogout, children }) {
   const roleDetails = roles.find((item) => item.id === role) || roles[0];
   const items = sidebarItems[role] || sidebarItems.operations;
 

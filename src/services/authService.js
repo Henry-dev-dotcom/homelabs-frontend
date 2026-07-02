@@ -1,4 +1,3 @@
-import { roles } from '../data/dashboardData.js';
 import { apiRequest, jsonBody } from './apiClient.js';
 
 export function roleToApiRole(role) {
@@ -52,29 +51,39 @@ function storeAuthResult(result) {
   };
 }
 
-export async function login({ email, password, role }) {
-  const selectedRole = roles.find((item) => item.id === role) || roles.find((item) => item.id === 'patient') || roles[0];
+export async function login({ email, password }) {
   const result = await apiRequest('/auth/login', {
     method: 'POST',
-    ...jsonBody({
-      email,
-      password,
-      role: roleToApiRole(selectedRole.id)
-    })
+    ...jsonBody({ email, password })
   });
   return storeAuthResult(result);
 }
 
-export async function googleLogin({ credential, role }) {
-  const selectedRole = roles.find((item) => item.id === role) || roles.find((item) => item.id === 'patient') || roles[0];
-  const result = await apiRequest('/auth/google', {
+export async function register({ name, email, phone, password }) {
+  const result = await apiRequest('/auth/register', {
     method: 'POST',
-    ...jsonBody({
-      credential,
-      role: roleToApiRole(selectedRole.id)
-    })
+    ...jsonBody({ name, email, phone: phone || '', password })
   });
   return storeAuthResult(result);
+}
+
+export async function googleLogin({ credential }) {
+  const result = await apiRequest('/auth/google', {
+    method: 'POST',
+    ...jsonBody({ credential })
+  });
+  return storeAuthResult(result);
+}
+
+export function getStoredUser() {
+  try {
+    const raw = sessionStorage.getItem('homelabs_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return { ...user, role: apiRoleToClientRole(user.roleKey || user.role) };
+  } catch {
+    return null;
+  }
 }
 
 export function logout() {

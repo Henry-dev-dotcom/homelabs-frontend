@@ -11,7 +11,7 @@ const nav = [
   { label: 'FAQ', href: '#faq' }
 ];
 
-export function PublicHeader({ onBook, onLogin, onTrack, onPartner }) {
+export function PublicHeader({ onBook, onLogin, onSignup, onTrack, onPartner }) {
   const [open, setOpen] = useState(false);
   return (
     <header className="site-header">
@@ -29,7 +29,8 @@ export function PublicHeader({ onBook, onLogin, onTrack, onPartner }) {
             <MessageCircle size={17} /> WhatsApp
           </a>
           <button className="secondary-button small portal-login-button" type="button" onClick={onTrack}>Track</button>
-          <button className="secondary-button small portal-login-button" type="button" onClick={onLogin}>Portal login</button>
+          <button className="secondary-button small portal-login-button" type="button" onClick={onLogin}>Sign in</button>
+          <button className="secondary-button small portal-login-button" type="button" onClick={onSignup}>Sign up</button>
           <button className="primary-button small" type="button" onClick={onBook}>Book visit</button>
           <button className="mobile-menu-button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Open menu">
             {open ? <X /> : <Menu />}
@@ -44,7 +45,8 @@ export function PublicHeader({ onBook, onLogin, onTrack, onPartner }) {
           ))}
           <button className="secondary-button" type="button" onClick={() => { setOpen(false); onTrack(); }}>Track booking</button>
           <button className="secondary-button" type="button" onClick={() => { setOpen(false); onPartner(); }}>Partner with us</button>
-          <button className="secondary-button" type="button" onClick={() => { setOpen(false); onLogin(); }}>Portal login</button>
+          <button className="secondary-button" type="button" onClick={() => { setOpen(false); onLogin(); }}>Sign in</button>
+          <button className="secondary-button" type="button" onClick={() => { setOpen(false); onSignup(); }}>Create patient account</button>
           <button className="primary-button" type="button" onClick={() => { setOpen(false); onBook(); }}>Book a Home Lab Visit</button>
         </nav>
       )}

@@ -18,6 +18,7 @@ import {
 
 const lazyNamed = (loader, exportName) => lazy(() => loader().then((module) => ({ default: module[exportName] })));
 
+const BookingPage = lazyNamed(() => import('./BookingPage.jsx'), 'BookingPage');
 const OperationsDashboard = lazyNamed(() => import('./dashboard/OperationsDashboard.jsx'), 'OperationsDashboard');
 const AdminDashboard = lazyNamed(() => import('./dashboard/AdminDashboard.jsx'), 'AdminDashboard');
 const PatientPortal = lazyNamed(() => import('./dashboard/PatientPortal.jsx'), 'PatientPortal');
@@ -107,8 +108,8 @@ const initialActivityLog = [
   'Production dashboard ready. Backend data will appear after login and API connection.'
 ];
 
-export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
-  const [activePage, setActivePage] = useState(getFirstSectionForRole(role));
+export function Dashboard({ role, user, initialSection, onBackHome, onLogout }) {
+  const [activePage, setActivePage] = useState(initialSection || getFirstSectionForRole(role));
   const [bookings, setBookings] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [labSamples, setLabSamples] = useState([]);
@@ -120,8 +121,8 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
   const [loadingDashboard, setLoadingDashboard] = useState(false);
 
   useEffect(() => {
-    setActivePage(getFirstSectionForRole(role));
-  }, [role]);
+    setActivePage(initialSection || getFirstSectionForRole(role));
+  }, [role]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   useEffect(() => {
@@ -591,6 +592,17 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
   };
 
   function renderPortal() {
+    if (role === 'patient' && activePage === 'book') {
+      return (
+        <BookingPage
+          embedded
+          initialPatient={{ fullName: user?.name || '', phone: user?.phone || '', email: user?.email || '' }}
+          onTrack={() => setActivePage('bookings')}
+          onBooked={() => loadBackendPage('bookings', 1)}
+          onBackHome={() => setActivePage('overview')}
+        />
+      );
+    }
     switch (role) {
       case 'admin':
         return <AdminDashboard activePage={activePage} data={data} actions={actions} />;
@@ -613,7 +625,6 @@ export function Dashboard({ role, onRoleChange, onBackHome, onLogout }) {
       role={role}
       activePage={activePage}
       onActivePageChange={setActivePage}
-      onRoleChange={onRoleChange}
       onBackHome={onBackHome}
       onLogout={onLogout}
     >

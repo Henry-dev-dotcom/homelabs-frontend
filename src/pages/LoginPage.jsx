@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Info, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, UserRoundPlus } from 'lucide-react';
 import { BrandMark } from '../components/BrandMark.jsx';
-import { roles } from '../data/dashboardData.js';
-import { googleLogin, login } from '../services/authService.js';
+import { googleLogin, login, register } from '../services/authService.js';
 import { GOOGLE_CLIENT_ID, loadGoogleIdentityScript } from '../services/googleIdentityService.js';
 
-export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
+export function LoginPage({ onBackHome, onLogin, initialMode = 'signin' }) {
+  const [mode, setMode] = useState(initialMode);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -14,10 +16,10 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
   const [error, setError] = useState('');
   const googleButtonRef = useRef(null);
 
-  const activeRole = roles.find((role) => role.id === selectedRole);
+  const signup = mode === 'signup';
 
-  function changeRole(role) {
-    onRoleChange(role);
+  function switchMode(nextMode) {
+    setMode(nextMode);
     setError('');
   }
 
@@ -29,8 +31,8 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
     setGoogleLoading(true);
     setError('');
     try {
-      const result = await googleLogin({ credential: response.credential, role: selectedRole });
-      onLogin(result.user?.role || selectedRole);
+      const result = await googleLogin({ credential: response.credential });
+      onLogin(result.user.role, result.user);
     } catch (err) {
       setError(err.message || 'Google sign-in failed. Please try again or use email and password.');
     } finally {
@@ -58,7 +60,7 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
           type: 'standard',
           theme: 'outline',
           size: 'large',
-          text: 'continue_with',
+          text: signup ? 'signup_with' : 'continue_with',
           shape: 'pill',
           width: Math.min(340, availableWidth)
         });
@@ -68,18 +70,20 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
       });
 
     return () => { cancelled = true; };
-  }, [selectedRole]);
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleLogin(event) {
-    event?.preventDefault();
-    if (!email || !password) return;
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!email || !password || (signup && !name)) return;
     setLoading(true);
     setError('');
     try {
-      const result = await login({ email, password, role: selectedRole });
-      onLogin(result.user?.role || selectedRole);
+      const result = signup
+        ? await register({ name, email, phone, password })
+        : await login({ email, password });
+      onLogin(result.user.role, result.user);
     } catch (err) {
-      setError(err.message || 'Sign-in failed. Check your email and password, then try again.');
+      setError(err.message || (signup ? 'Could not create your account. Please try again.' : 'Sign-in failed. Check your email and password, then try again.'));
     } finally {
       setLoading(false);
     }
@@ -91,53 +95,73 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
         <div className="login-panel">
           <button className="ghost-button dark-text" type="button" onClick={onBackHome}><ArrowLeft size={17} /> Back to website</button>
           <BrandMark />
-          <span className="login-eyebrow">Portal access</span>
-          <h1>Sign into HomeLabs.</h1>
-          <p>One login for patients, clinicians, phlebotomists, labs, operations and admin. Choose your portal, sign in, and continue where you left off.</p>
+          <span className="login-eyebrow">{signup ? 'Join HomeLabs' : 'Portal access'}</span>
+          <h1>{signup ? 'Create your patient account.' : 'Sign into HomeLabs.'}</h1>
+          <p>
+            {signup
+              ? 'Book home lab visits, follow every collection step, and receive your results securely — all from your personal patient portal.'
+              : 'One login for patients and staff. Your account determines which portal opens — patients book visits and receive results, staff manage operations.'}
+          </p>
           <div className="login-assurance">
             <ShieldCheck size={22} />
-            <span>Your sign-in is encrypted and each portal only shows what your role is allowed to see.</span>
+            <span>Your sign-in is encrypted and each account only sees what its role allows.</span>
           </div>
         </div>
 
         <div className="login-card">
           <div className="login-card-head">
-            <div className="step-emblem"><LockKeyhole size={22} /></div>
+            <div className="step-emblem">{signup ? <UserRoundPlus size={22} /> : <LockKeyhole size={22} />}</div>
             <div>
-              <span>Secure login</span>
-              <h2>Access dashboard</h2>
+              <span>{signup ? 'New patient' : 'Secure login'}</span>
+              <h2>{signup ? 'Create account' : 'Welcome back'}</h2>
             </div>
           </div>
 
-          <label className="field">
-            <span>Select portal</span>
-            <select value={selectedRole} onChange={(event) => changeRole(event.target.value)}>
-              {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </select>
-          </label>
-          {activeRole?.description && (
-            <span className="role-hint"><Info size={16} /> {activeRole.description}</span>
-          )}
+          <div className="auth-mode-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={!signup} className={signup ? '' : 'active'} onClick={() => switchMode('signin')}>Sign in</button>
+            <button type="button" role="tab" aria-selected={signup} className={signup ? 'active' : ''} onClick={() => switchMode('signup')}>Create account</button>
+          </div>
 
-          <form className="form-grid" onSubmit={handleLogin}>
+          <form className="form-grid" onSubmit={handleSubmit}>
+            {signup && (
+              <label className="field">
+                <span>Full name</span>
+                <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Your full name" autoComplete="name" required minLength={2} />
+              </label>
+            )}
             <label className="field">
               <span>Email</span>
-              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@yourdomain.com" autoComplete="email" />
+              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="email" required />
             </label>
+            {signup && (
+              <label className="field">
+                <span>Phone (optional)</span>
+                <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+233..." autoComplete="tel" />
+              </label>
+            )}
             <label className="field">
               <span>Password</span>
               <div className="input-with-action">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" autoComplete="current-password" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={signup ? 'Create a password' : 'Enter your password'}
+                  autoComplete={signup ? 'new-password' : 'current-password'}
+                  required
+                  minLength={signup ? 8 : undefined}
+                />
                 <button className="input-action-button" type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </label>
+            {signup && <small className="form-note">At least 8 characters, with an uppercase letter, a lowercase letter and a number.</small>}
 
-            {error && <div className="form-error-list" role="alert"><strong>Sign-in issue</strong><ul><li>{error}</li></ul></div>}
+            {error && <div className="form-error-list" role="alert"><strong>{signup ? 'Sign-up issue' : 'Sign-in issue'}</strong><ul><li>{error}</li></ul></div>}
 
-            <button className="primary-button full" type="submit" disabled={loading || googleLoading || !email || !password}>
-              {loading ? 'Signing in...' : 'Sign in'} <ArrowRight size={17} />
+            <button className="primary-button full" type="submit" disabled={loading || googleLoading || !email || !password || (signup && !name)}>
+              {loading ? (signup ? 'Creating account…' : 'Signing in…') : (signup ? 'Create my account' : 'Sign in')} <ArrowRight size={17} />
             </button>
           </form>
 
@@ -148,10 +172,14 @@ export function LoginPage({ onBackHome, onLogin, selectedRole, onRoleChange }) {
             ) : (
               <div className="google-config-note">Google sign-in is not enabled on this deployment yet.</div>
             )}
-            <small>New Google sign-ups are created as patient accounts. Staff access must match an approved account email.</small>
+            <small>Google sign-in creates a patient account automatically if you are new.</small>
           </div>
 
-          <small className="form-note">Need access or forgot your password? Contact the HomeLabs team and an administrator will help you.</small>
+          <small className="form-note">
+            {signup
+              ? 'Staff accounts are created by a HomeLabs administrator — no self sign-up needed for staff.'
+              : 'New to HomeLabs? Choose “Create account” above. Staff logins are issued by your administrator.'}
+          </small>
         </div>
       </section>
     </main>
