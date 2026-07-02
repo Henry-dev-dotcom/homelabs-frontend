@@ -60,6 +60,7 @@ export function BookingPage({ onBackHome, onTrack }) {
   const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [searchOpen, setSearchOpen] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [submitStatus, setSubmitStatus] = useState({ loading: false, error: '', paymentUrl: '' });
   const [options, setOptions] = useState({
@@ -115,7 +116,21 @@ export function BookingPage({ onBackHome, onTrack }) {
       const matchesCategory = !form.category || test.category === form.category;
       return matchesSearch && matchesCategory;
     });
-  }, [form.testSearch, form.category]);
+  }, [form.testSearch, form.category, tests]);
+
+  const searchSuggestions = useMemo(() => {
+    const query = form.testSearch.trim().toLowerCase();
+    if (!query) return [];
+    return tests
+      .filter((test) => `${test.name} ${test.category}`.toLowerCase().includes(query))
+      .slice(0, 8);
+  }, [form.testSearch, tests]);
+
+  function selectSuggestion(test) {
+    if (!form.selectedTestIds.includes(test.id)) toggleTest(test.id);
+    update('testSearch', '');
+    setSearchOpen(false);
+  }
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -306,7 +321,55 @@ export function BookingPage({ onBackHome, onTrack }) {
           {currentStep.id === 'tests' && (
             <div className="test-step">
               <div className="form-grid two">
-                <Field label="Search tests"><div className="input-with-icon"><Search size={18} /><input value={form.testSearch} onChange={(e) => update('testSearch', e.target.value)} placeholder="Search FBC, HbA1c, LFT..." /></div></Field>
+                <Field label="Search tests">
+                  <div className="search-suggest">
+                    <div className="input-with-icon">
+                      <Search size={18} />
+                      <input
+                        value={form.testSearch}
+                        onChange={(e) => { update('testSearch', e.target.value); setSearchOpen(true); }}
+                        onFocus={() => setSearchOpen(true)}
+                        onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') setSearchOpen(false);
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (searchSuggestions.length > 0) selectSuggestion(searchSuggestions[0]);
+                          }
+                        }}
+                        placeholder="Start typing: FBC, Malaria, HbA1c..."
+                        role="combobox"
+                        aria-expanded={searchOpen && form.testSearch.trim() !== ''}
+                        aria-autocomplete="list"
+                      />
+                    </div>
+                    {searchOpen && form.testSearch.trim() !== '' && (
+                      <div className="suggest-list" role="listbox">
+                        {searchSuggestions.map((test) => {
+                          const selected = form.selectedTestIds.includes(test.id);
+                          return (
+                            <button
+                              key={test.id}
+                              type="button"
+                              role="option"
+                              aria-selected={selected}
+                              className={`suggest-item ${selected ? 'selected' : ''}`}
+                              onMouseDown={(e) => { e.preventDefault(); selectSuggestion(test); }}
+                            >
+                              <span className="suggest-name">{selected && <CheckCircle2 size={15} />} {test.name}</span>
+                              <span className="suggest-meta">{test.category} · GHS {test.price}</span>
+                            </button>
+                          );
+                        })}
+                        {searchSuggestions.length === 0 && (
+                          <div className="suggest-empty">
+                            No matching test found. Type it in the “Can’t find the test?” box below and our team will confirm it.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Field>
                 <Field label="Category"><select value={form.category} onChange={(e) => update('category', e.target.value)}><option value="">All categories</option>{testCategories.map((category) => <option key={category}>{category}</option>)}</select></Field>
               </div>
               <div className="test-list">

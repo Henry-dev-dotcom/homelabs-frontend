@@ -494,6 +494,41 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 
 .empty-tests-note { display: grid; gap: 12px; justify-items: start; margin-top: 18px; padding: 20px; border: 1px dashed var(--line); border-radius: 20px; background: var(--soft); color: var(--muted); line-height: 1.55; font-weight: 750; }
 
+/* Test search typeahead dropdown */
+.search-suggest { position: relative; }
+.suggest-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 25;
+  display: grid;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 22px 55px rgba(8, 47, 63, 0.16);
+}
+.suggest-item {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  text-align: left;
+}
+.suggest-item:hover, .suggest-item:focus-visible { background: var(--mint-2); }
+.suggest-item.selected { background: var(--mint); }
+.suggest-name { display: flex; align-items: center; gap: 6px; color: var(--navy); font-weight: 900; }
+.suggest-name svg { color: var(--teal); flex-shrink: 0; }
+.suggest-meta { color: var(--muted); font-size: 13px; }
+.suggest-empty { padding: 13px; color: var(--muted); line-height: 1.5; font-weight: 750; }
+
 /* Booking validation and Paystack method UX */
 .validation-panel {
   display: grid;
