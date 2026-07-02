@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, Building2, CheckCircle2, FlaskConical, Hospital, MessageCircle, Send, Stethoscope, UsersRound } from 'lucide-react';
 import { Field } from '../components/dashboard/DashboardPrimitives.jsx';
 import { createPartnerLead } from '../services/partnerService.js';
+import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 
 const partnerTypes = [
   { id: 'laboratory', title: 'Laboratory partner', icon: FlaskConical, text: 'Receive HomeLabs-collected samples, confirm receipt and upload results.' },
@@ -120,7 +121,7 @@ export function PartnerInquiryPage({ onBackHome, onLogin }) {
               <article><strong>02</strong><span>4–8 week pilot</span><small>Test collection quality, logistics and result turnaround.</small></article>
               <article><strong>03</strong><span>Sign and scale</span><small>Move to full partnership, preferred listing or institutional route.</small></article>
             </div>
-            <a className="secondary-button full" href="https://wa.me/233000000000?text=Hello%20HomeLabs%2C%20I%20want%20to%20discuss%20a%20partnership" target="_blank" rel="noreferrer"><MessageCircle size={17} /> Discuss on WhatsApp</a>
+            <a className="secondary-button full" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to discuss a partnership')} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Discuss on WhatsApp</a>
           </section>
 
           <form className="dashboard-card" onSubmit={submit}>

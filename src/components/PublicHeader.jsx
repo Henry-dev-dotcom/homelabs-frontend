@@ -1,6 +1,7 @@
 import { Menu, MessageCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import { BrandMark } from './BrandMark.jsx';
+import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 
 const nav = [
   { label: 'Home', href: '#home' },
@@ -24,7 +25,7 @@ export function PublicHeader({ onBook, onLogin, onTrack, onPartner }) {
         </nav>
 
         <div className="header-actions">
-          <a className="whatsapp-button" href="https://wa.me/233000000000?text=Hello%20HomeLabs%2C%20I%20want%20to%20book%20a%20home%20lab%20visit" target="_blank" rel="noreferrer">
+          <a className="whatsapp-button" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer">
             <MessageCircle size={17} /> WhatsApp
           </a>
           <button className="secondary-button small portal-login-button" type="button" onClick={onTrack}>Track</button>

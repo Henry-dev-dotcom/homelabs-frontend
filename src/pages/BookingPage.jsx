@@ -17,6 +17,7 @@ import {
 import { partnerLabs as defaultPartnerLabs, serviceAreas as defaultServiceAreas, testCategories as defaultTestCategories, tests as defaultTests, timeSlots } from '../data/homelabsData.js';
 import { createBooking, getBookingOptions, uploadPrescription } from '../services/bookingService.js';
 import { initialisePaystackPayment, mapPaymentMethodToPaystackChannel } from '../services/paymentService.js';
+import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 import { hasBlockingErrors, validateBookingForm, validateBookingStep } from '../utils/bookingValidation.js';
 
 const steps = [
@@ -67,22 +68,29 @@ export function BookingPage({ onBackHome, onTrack }) {
     partnerLabs: defaultPartnerLabs,
     testCategories: defaultTestCategories
   });
+  const [optionsStatus, setOptionsStatus] = useState('loading');
+  const [optionsRetryCount, setOptionsRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setOptionsStatus('loading');
     getBookingOptions()
       .then((nextOptions) => {
         if (!active) return;
         setOptions(nextOptions);
+        setOptionsStatus('ready');
         setForm((current) => ({
           ...current,
           areaId: nextOptions.serviceAreas.some((area) => area.id === current.areaId) ? current.areaId : nextOptions.serviceAreas[0]?.id || current.areaId,
           partnerLabId: nextOptions.partnerLabs.some((lab) => lab.id === current.partnerLabId) ? current.partnerLabId : nextOptions.partnerLabs[0]?.id || current.partnerLabId
         }));
       })
-      .catch((error) => setSubmitStatus((current) => ({ ...current, error: `Unable to load booking options: ${error.message}` })));
+      .catch((error) => {
+        console.warn('Booking options fetch failed.', error);
+        if (active) setOptionsStatus('error');
+      });
     return () => { active = false; };
-  }, []);
+  }, [optionsRetryCount]);
 
   const serviceAreas = options.serviceAreas;
   const tests = options.tests;
@@ -124,7 +132,7 @@ export function BookingPage({ onBackHome, onTrack }) {
   }
 
   function next() {
-    const stepErrors = validateBookingStep(form, currentStep.id);
+    const stepErrors = validateBookingStep(form, currentStep.id, { hasServiceAreas: serviceAreas.length > 0 });
     if (stepErrors.length) {
       setErrors((current) => ({ ...current, [currentStep.id]: stepErrors }));
       return;
@@ -133,13 +141,22 @@ export function BookingPage({ onBackHome, onTrack }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function goToStep(index) {
+    if (index <= stepIndex) {
+      setStepIndex(index);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    next();
+  }
+
   function previous() {
     setStepIndex((index) => Math.max(index - 1, 0));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function submitBooking() {
-    const allErrors = validateBookingForm(form, steps);
+    const allErrors = validateBookingForm(form, steps, { hasServiceAreas: serviceAreas.length > 0 });
     setErrors(allErrors);
 
     if (hasBlockingErrors(allErrors)) {
@@ -226,7 +243,7 @@ export function BookingPage({ onBackHome, onTrack }) {
             <h1>Book a Home Lab Visit</h1>
             <p>Complete the request below. Patients can choose HomeLabs Laboratory, choose a partner lab, or let HomeLabs recommend a lab.</p>
           </div>
-          <a className="whatsapp-button dark" href="https://wa.me/233000000000?text=Hello%20HomeLabs%2C%20I%20want%20to%20book%20a%20home%20lab%20visit" target="_blank" rel="noreferrer"><MessageCircle size={17} /> Book on WhatsApp</a>
+          <a className="whatsapp-button dark" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Book on WhatsApp</a>
         </div>
       </section>
 
@@ -238,7 +255,7 @@ export function BookingPage({ onBackHome, onTrack }) {
               const active = index === stepIndex;
               const complete = index < stepIndex;
               return (
-                <button key={step.id} type="button" className={`step-button ${active ? 'active' : ''} ${complete ? 'complete' : ''}`} onClick={() => setStepIndex(index)}>
+                <button key={step.id} type="button" className={`step-button ${active ? 'active' : ''} ${complete ? 'complete' : ''}`} onClick={() => goToStep(index)}>
                   <Icon size={18} />
                   <span>{step.label}</span>
                   {complete && <CheckCircle2 size={17} />}
@@ -302,6 +319,18 @@ export function BookingPage({ onBackHome, onTrack }) {
                   </button>
                 ))}
               </div>
+              {filteredTests.length === 0 && (
+                <div className="empty-tests-note">
+                  {optionsStatus === 'loading' && <span>Loading the available tests…</span>}
+                  {optionsStatus === 'error' && (
+                    <>
+                      <span>We could not load the test list. Check your internet connection and try again — or type your test below and we will handle it manually.</span>
+                      <button className="secondary-button small" type="button" onClick={() => setOptionsRetryCount((count) => count + 1)}>Retry loading tests</button>
+                    </>
+                  )}
+                  {optionsStatus === 'ready' && <span>No tests match your search. Try a different keyword, or type the test below and our team will confirm it.</span>}
+                </div>
+              )}
               <div className="manual-request-box">
                 <FileUp size={22} />
                 <div>
@@ -319,18 +348,21 @@ export function BookingPage({ onBackHome, onTrack }) {
 
           {currentStep.id === 'lab' && (
             <div className="choice-grid">
-              <ChoiceCard title="Use HomeLabs Laboratory" text="Route the sample to HomeLabs-owned laboratory processing." selected={form.labChoice === 'homelabs'} onClick={() => { update('labChoice', 'homelabs'); update('partnerLabId', 'homelabs-lab'); }} />
+              <ChoiceCard title="Use HomeLabs Laboratory" text="Route the sample to HomeLabs-owned laboratory processing." selected={form.labChoice === 'homelabs'} onClick={() => update('labChoice', 'homelabs')} />
               <ChoiceCard title="Choose partner laboratory" text="Select one of the available partner labs in Kumasi." selected={form.labChoice === 'partner'} onClick={() => update('labChoice', 'partner')} />
               <ChoiceCard title="Let HomeLabs recommend" text="HomeLabs will recommend the best lab based on test, location and turnaround time." selected={form.labChoice === 'recommend'} onClick={() => update('labChoice', 'recommend')} />
-              {(form.labChoice === 'partner' || form.labChoice === 'homelabs') && (
+              {form.labChoice === 'partner' && (
                 <div className="partner-selector">
-                  <h3>Select lab</h3>
+                  <h3>Select partner lab</h3>
                   {partnerLabs.map((lab) => (
                     <label key={lab.id} className="radio-row">
                       <input type="radio" name="partnerLab" checked={form.partnerLabId === lab.id} onChange={() => update('partnerLabId', lab.id)} />
                       <span><strong>{lab.name}</strong><small>{lab.type} · {lab.location} · {lab.turnaround}</small></span>
                     </label>
                   ))}
+                  {partnerLabs.length === 0 && (
+                    <p className="form-note">The partner lab list is not available right now. Choose “Use HomeLabs Laboratory” or “Let HomeLabs recommend” to continue.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -429,7 +461,7 @@ function buildApiBookingPayload({ form, selectedTests, selectedArea, selectedPar
     prescriptionFileId: uploadedPrescription?.fileId,
     prescriptionUrl: uploadedPrescription?.fileUrl,
     labChoice,
-    selectedLabId: labChoice === 'partner' ? selectedPartnerLab.id : selectedPartnerLab.id,
+    selectedLabId: labChoice === 'partner' ? selectedPartnerLab.id || null : null,
     location: {
       areaId: selectedArea.id || null,
       address: form.address,

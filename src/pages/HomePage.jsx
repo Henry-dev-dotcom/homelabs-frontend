@@ -16,6 +16,7 @@ import {
   UserRoundCheck
 } from 'lucide-react';
 import { faqs } from '../data/homelabsData.js';
+import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 
 const howSteps = [
   { icon: ClipboardCheck, title: 'Order or request', text: 'Patients, clinicians or support staff create a booking from web, phone or WhatsApp.' },
@@ -50,7 +51,7 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
             <p className="hero-text">Certified blood and sample collection at home, office, or care facility in Kumasi — with reliable transport to HomeLabs Laboratory or the patient’s preferred partner lab.</p>
             <div className="hero-actions">
               <button className="primary-button large" type="button" onClick={onBook}>Book a Home Lab Visit <ArrowRight size={18} /></button>
-              <a className="secondary-button large" href="https://wa.me/233000000000?text=Hello%20HomeLabs%2C%20I%20want%20to%20book%20a%20home%20lab%20visit" target="_blank" rel="noreferrer"><MessageCircle size={18} /> Book on WhatsApp</a>
+              <a className="secondary-button large" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Book on WhatsApp</a>
               <button className="outline-button large" type="button" onClick={onTrack}>Track booking</button>
             </div>
             <div className="hero-note">Patients choose their lab, use HomeLabs Laboratory, or allow HomeLabs to recommend the best option.</div>

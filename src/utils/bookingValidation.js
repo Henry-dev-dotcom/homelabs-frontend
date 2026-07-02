@@ -7,7 +7,7 @@ export function isValidEmail(email = '') {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-export function validateBookingStep(form, stepId) {
+export function validateBookingStep(form, stepId, context = {}) {
   const errors = [];
 
   if (stepId === 'patient') {
@@ -24,13 +24,13 @@ export function validateBookingStep(form, stepId) {
 
   if (stepId === 'lab') {
     if (!form.labChoice) errors.push('Choose a laboratory routing option.');
-    if ((form.labChoice === 'partner' || form.labChoice === 'homelabs') && !form.partnerLabId) {
-      errors.push('Select the laboratory that should process the sample.');
+    if (form.labChoice === 'partner' && !form.partnerLabId) {
+      errors.push('Select the partner laboratory that should process the sample.');
     }
   }
 
   if (stepId === 'location') {
-    if (!form.areaId) errors.push('Select the Kumasi service area.');
+    if (!form.areaId && context.hasServiceAreas !== false) errors.push('Select the Kumasi service area.');
     if (!form.address?.trim()) errors.push('Enter the full collection address.');
     if (!form.landmark?.trim()) errors.push('Add a nearby landmark or access instruction.');
   }
@@ -48,10 +48,10 @@ export function validateBookingStep(form, stepId) {
   return errors;
 }
 
-export function validateBookingForm(form, steps) {
+export function validateBookingForm(form, steps, context = {}) {
   const result = {};
   steps.forEach((step) => {
-    result[step.id] = validateBookingStep(form, step.id);
+    result[step.id] = validateBookingStep(form, step.id, context);
   });
   return result;
 }
