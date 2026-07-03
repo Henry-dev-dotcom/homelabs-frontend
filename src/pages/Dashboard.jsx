@@ -131,16 +131,27 @@ export function Dashboard({ role, user, initialSection, onBackHome, onLogout }) 
     async function loadBackendState() {
       setLoadingDashboard(true);
       try {
-        const requests = [
-          listBookings({ page: 1, limit: 20 }).then((items) => ({ key: 'bookings', items })).catch((error) => ({ key: 'bookingsError', error })),
-          listAvailablePhlebotomists({ page: 1, limit: 50 }).then((items) => ({ key: 'staff', items })).catch((error) => ({ key: 'staffError', error })),
-          listPayments({ page: 1, limit: 20 }).then((items) => ({ key: 'payments', items })).catch((error) => ({ key: 'paymentsError', error })),
-          Promise.all([listIncomingSamples({ page: 1, limit: 20 }), listAcceptedSamples({ page: 1, limit: 20 })]).then(([incoming, accepted]) => ({ key: 'samples', items: mergeById(incoming, accepted) })).catch((error) => ({ key: 'samplesError', error }))
-        ];
+        // Only request the collections this role's portal actually renders,
+        // so first paint after login is not blocked by unused data.
+        const roleCollections = {
+          admin: ['bookings', 'payments'],
+          operations: ['bookings', 'staff', 'payments', 'samples'],
+          patient: ['bookings'],
+          clinician: ['bookings'],
+          phlebotomist: ['bookings', 'assignments'],
+          lab: ['bookings', 'samples']
+        };
+        const wanted = roleCollections[role] || roleCollections.operations;
 
-        if (role === 'phlebotomist') {
-          requests.push(listMyTodayAssignments({ page: 1, limit: 20 }).then((items) => ({ key: 'assignments', items })).catch((error) => ({ key: 'assignmentsError', error })));
-        }
+        const requestBuilders = {
+          bookings: () => listBookings({ page: 1, limit: 20 }).then((items) => ({ key: 'bookings', items })),
+          staff: () => listAvailablePhlebotomists({ page: 1, limit: 50 }).then((items) => ({ key: 'staff', items })),
+          payments: () => listPayments({ page: 1, limit: 20 }).then((items) => ({ key: 'payments', items })),
+          samples: () => Promise.all([listIncomingSamples({ page: 1, limit: 20 }), listAcceptedSamples({ page: 1, limit: 20 })]).then(([incoming, accepted]) => ({ key: 'samples', items: mergeById(incoming, accepted) })),
+          assignments: () => listMyTodayAssignments({ page: 1, limit: 20 }).then((items) => ({ key: 'assignments', items }))
+        };
+
+        const requests = wanted.map((name) => requestBuilders[name]().catch((error) => ({ key: `${name}Error`, error })));
 
         const results = await Promise.all(requests);
         if (!alive) return;

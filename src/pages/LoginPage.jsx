@@ -5,6 +5,12 @@ import { googleLogin, login, register } from '../services/authService.js';
 import { GOOGLE_CLIENT_ID, loadGoogleIdentityScript } from '../services/googleIdentityService.js';
 
 export function LoginPage({ onBackHome, onLogin, initialMode = 'signin' }) {
+  // Fetch the dashboard code in the background while the user types their
+  // credentials, so the portal opens instantly after sign-in.
+  useEffect(() => {
+    import('./Dashboard.jsx').catch(() => {});
+  }, []);
+
   const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
