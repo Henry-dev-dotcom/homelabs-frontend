@@ -165,7 +165,7 @@ function WhatsappBooking({ actions }) {
               <li>Full name, phone and email.</li>
               <li>Test name or doctor request form.</li>
               <li>Preferred lab or HomeLabs recommendation.</li>
-              <li>Kumasi area, address and landmark.</li>
+              <li>Service area, address and landmark.</li>
               <li>Preferred collection date and time slot.</li>
               <li>Payment method and consent confirmation.</li>
             </ol>

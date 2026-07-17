@@ -27,5 +27,9 @@ export const faqs = [
   {
     question: 'How do I pay?',
     answer: 'The platform supports Paystack checkout where enabled by the backend configuration.'
+  },
+  {
+    question: 'How do I receive my lab report?',
+    answer: 'You receive your report as a hard copy, soft copy or both — whichever you prefer. Official report management is handled through the LHIMS platform.'
   }
 ];

@@ -84,11 +84,11 @@ function ResultUpload({ labSamples, actions }) {
     <div className="dashboard-content">
       <section className="dashboard-grid two-columns">
         <div className="dashboard-card">
-          <SectionTitle eyebrow="Results" title="Upload result" text="Lab staff or authorised admin can enter result details or upload PDF." />
+          <SectionTitle eyebrow="Results" title="Upload result" text="Report upload on the portal is optional for now — official report management is handled on the LHIMS platform. Lab staff or authorised admin can still enter result details or upload a PDF." />
           <div className="form-grid">
             <Field label="Sample ID"><select value={selectedSample} onChange={(event) => setSelectedSample(event.target.value)}>{labSamples.map((sample) => <option key={sample.id} value={sample.id}>{sample.id} · {sample.patient}</option>)}</select></Field>
             <Field label="Result notes"><textarea placeholder="Enter result notes or internal comment" /></Field>
-            <label className="file-input"><input type="file" /> <FileUp size={17} /> Upload result PDF</label>
+            <label className="file-input"><input type="file" /> <FileUp size={17} /> Upload result PDF (optional — LHIMS handles official reports)</label>
             <Field label="Release rule"><select value={releaseRule} onChange={(event) => setReleaseRule(event.target.value)}><option>Ready for release</option><option>Release to clinician</option><option>Release to patient</option><option>Release to patient and clinician</option><option>Admin review required</option></select></Field>
           </div>
           <div className="field-actions">

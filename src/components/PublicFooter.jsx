@@ -1,5 +1,6 @@
 import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { BrandMark } from './BrandMark.jsx';
+import { contactInfo } from '../data/contactInfo.js';
 
 export function PublicFooter({ onBook, onTrack, onPartner }) {
   return (
@@ -7,16 +8,16 @@ export function PublicFooter({ onBook, onTrack, onPartner }) {
       <div className="container footer-grid">
         <div>
           <BrandMark />
-          <p className="footer-text">Certified mobile sample collection in Kumasi. HomeLabs collects, tracks and delivers specimens to HomeLabs Laboratory or selected partner labs.</p>
+          <p className="footer-text">Leader in mobile phlebotomy services, Ghana. HomeLabs collects, tracks and delivers your samples to your referred or preferred laboratory for timely reports.</p>
           <div className="footer-cta-stack"><button className="primary-button" type="button" onClick={onBook}>Book a Home Lab Visit</button><button className="outline-button footer-outline" type="button" onClick={onTrack}>Track booking</button></div>
         </div>
         <div>
           <h3>Contact</h3>
           <ul className="contact-list">
-            <li><Phone size={17} /> +233 00 000 0000</li>
-            <li><Mail size={17} /> hello@homelabs.gh</li>
+            <li><Phone size={17} /> {contactInfo.phone}</li>
+            <li><Mail size={17} /> {contactInfo.email}</li>
             <li><MessageCircle size={17} /> WhatsApp booking available</li>
-            <li><MapPin size={17} /> Kumasi, Ghana</li>
+            <li><MapPin size={17} /> {contactInfo.location}</li>
           </ul>
         </div>
         <div>

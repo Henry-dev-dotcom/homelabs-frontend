@@ -1,4 +1,5 @@
 import { apiRequest, jsonBody } from './apiClient.js';
+import { contactInfo } from '../data/contactInfo.js';
 
 export async function sendBookingConfirmation({ bookingId, channel = 'sms', recipient }) {
   return apiRequest('/notifications/booking-confirmation', {
@@ -15,6 +16,5 @@ export async function sendPrepInstructions({ bookingId, fastingRequired, channel
 }
 
 export function buildWhatsAppBookingUrl(message) {
-  const phone = import.meta.env.VITE_HOMELABS_WHATSAPP || '233000000000';
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${contactInfo.whatsapp}?text=${encodeURIComponent(message)}`;
 }

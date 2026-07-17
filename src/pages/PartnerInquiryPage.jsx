@@ -6,7 +6,7 @@ import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 
 const partnerTypes = [
   { id: 'laboratory', title: 'Laboratory partner', icon: FlaskConical, text: 'Receive HomeLabs-collected samples, confirm receipt and upload results.' },
-  { id: 'hospital', title: 'Hospital partner', icon: Hospital, text: 'Refer post-discharge and routine patients for home collection in Kumasi.' },
+  { id: 'hospital', title: 'Hospital partner', icon: Hospital, text: 'Refer post-discharge and routine patients for home collection.' },
   { id: 'clinician', title: 'Clinician', icon: Stethoscope, text: 'Create patient requests and receive results through the clinician portal.' },
   { id: 'corporate', title: 'Corporate wellness', icon: UsersRound, text: 'Arrange workplace screening and recurring wellness panels for teams.' }
 ];
@@ -17,7 +17,7 @@ const initialForm = {
   contactName: '',
   phone: '',
   email: '',
-  location: 'Kumasi',
+  location: '',
   message: ''
 };
 
@@ -63,7 +63,7 @@ export function PartnerInquiryPage({ onBackHome, onLogin }) {
             <div className="summary-row"><span>Partner type</span><strong>{selectedType.title}</strong></div>
             <div className="summary-row"><span>Organisation</span><strong>{form.organisation || 'Not provided'}</strong></div>
             <div className="summary-row"><span>Contact</span><strong>{form.contactName || 'Not provided'} · {form.phone || 'No phone'}</strong></div>
-            <div className="summary-row"><span>Location</span><strong>{form.location || 'Kumasi'}</strong></div>
+            <div className="summary-row"><span>Location</span><strong>{form.location || 'Remote'}</strong></div>
           </div>
           <div className="booking-actions centered-actions">
             <button className="primary-button" type="button" onClick={() => { setSubmitted(false); setForm(initialForm); }}>Create another lead</button>
@@ -82,7 +82,7 @@ export function PartnerInquiryPage({ onBackHome, onLogin }) {
           <div>
             <span>Partnership enquiry</span>
             <h1>Partner with HomeLabs.</h1>
-            <p>Register interest as a laboratory, hospital, clinician or corporate wellness partner for the Kumasi MVP rollout.</p>
+            <p>Register interest as a laboratory, hospital, clinician or corporate wellness partner with HomeLabs.</p>
           </div>
           <button className="whatsapp-button dark" type="button" onClick={onLogin}>Portal preview</button>
         </div>
@@ -135,7 +135,7 @@ export function PartnerInquiryPage({ onBackHome, onLogin }) {
               <Field label="Contact name"><input value={form.contactName} onChange={(event) => update('contactName', event.target.value)} placeholder="Full name" /></Field>
               <Field label="Phone"><input value={form.phone} onChange={(event) => update('phone', event.target.value)} placeholder="+233..." /></Field>
               <Field label="Email"><input value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="name@organisation.com" /></Field>
-              <Field label="Location"><input value={form.location} onChange={(event) => update('location', event.target.value)} placeholder="Kumasi" /></Field>
+              <Field label="Location"><input value={form.location} onChange={(event) => update('location', event.target.value)} placeholder="Your location" /></Field>
               <Field label="Partner type"><select value={form.partnerType} onChange={(event) => update('partnerType', event.target.value)}>{partnerTypes.map((type) => <option key={type.id} value={type.id}>{type.title}</option>)}</select></Field>
               <Field label="Message"><textarea value={form.message} onChange={(event) => update('message', event.target.value)} placeholder="Tell HomeLabs what you want to set up" /></Field>
             </div>

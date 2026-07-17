@@ -420,7 +420,7 @@ export function BookingPage({ onBackHome, onTrack, embedded = false, initialPati
           {currentStep.id === 'lab' && (
             <div className="choice-grid">
               <ChoiceCard title="Use HomeLabs Laboratory" text="Route the sample to HomeLabs-owned laboratory processing." selected={form.labChoice === 'homelabs'} onClick={() => update('labChoice', 'homelabs')} />
-              <ChoiceCard title="Choose partner laboratory" text="Select one of the available partner labs in Kumasi." selected={form.labChoice === 'partner'} onClick={() => update('labChoice', 'partner')} />
+              <ChoiceCard title="Choose partner laboratory" text="Select one of the available partner labs." selected={form.labChoice === 'partner'} onClick={() => update('labChoice', 'partner')} />
               <ChoiceCard title="Let HomeLabs recommend" text="HomeLabs will recommend the best lab based on test, location and turnaround time." selected={form.labChoice === 'recommend'} onClick={() => update('labChoice', 'recommend')} />
               {form.labChoice === 'partner' && (
                 <div className="partner-selector">
@@ -441,7 +441,7 @@ export function BookingPage({ onBackHome, onTrack, embedded = false, initialPati
 
           {currentStep.id === 'location' && (
             <div className="form-grid two">
-              <Field label="Kumasi area"><select value={form.areaId} onChange={(e) => update('areaId', e.target.value)}>{serviceAreas.map((area) => <option key={area.id} value={area.id}>{area.name} — GHS {area.fee}</option>)}</select></Field>
+              <Field label="Service area"><select value={form.areaId} onChange={(e) => update('areaId', e.target.value)}>{serviceAreas.map((area) => <option key={area.id} value={area.id}>{area.name} — GHS {area.fee}</option>)}</select></Field>
               <Field label="Collection place"><select value={form.facilityType} onChange={(e) => update('facilityType', e.target.value)}><option>Home</option><option>Office</option><option>Care facility</option><option>Hotel</option><option>Other</option></select></Field>
               <Field label="Full address"><textarea value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="House number, street, area, GPS if available" /></Field>
               <Field label="Landmark"><textarea value={form.landmark} onChange={(e) => update('landmark', e.target.value)} placeholder="Nearest landmark or access instructions" /></Field>

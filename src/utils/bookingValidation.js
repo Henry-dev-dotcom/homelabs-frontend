@@ -30,7 +30,7 @@ export function validateBookingStep(form, stepId, context = {}) {
   }
 
   if (stepId === 'location') {
-    if (!form.areaId && context.hasServiceAreas !== false) errors.push('Select the Kumasi service area.');
+    if (!form.areaId && context.hasServiceAreas !== false) errors.push('Select your service area.');
     if (!form.address?.trim()) errors.push('Enter the full collection address.');
     if (!form.landmark?.trim()) errors.push('Add a nearby landmark or access instruction.');
   }

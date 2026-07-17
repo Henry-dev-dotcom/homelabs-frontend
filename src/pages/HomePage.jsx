@@ -20,15 +20,15 @@ import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 
 const howSteps = [
   { icon: ClipboardCheck, title: 'Order or request', text: 'Patients, clinicians or support staff create a booking from web, phone or WhatsApp.' },
-  { icon: CheckCircle2, title: 'Patient scheduled', text: 'HomeLabs confirms the patient details, location, preparation instructions and time slot.' },
-  { icon: UserRoundCheck, title: 'Certified collection', text: 'A certified phlebotomist collects the sample using sterile, single-use equipment.' },
-  { icon: Truck, title: 'Safe delivery', text: 'Specimens are transported to HomeLabs Lab or a selected partner lab with tracking.' },
-  { icon: FlaskConical, title: 'Results delivered', text: 'Results are uploaded and released to the patient, clinician, or both according to the request.' }
+  { icon: CheckCircle2, title: 'Request confirmed', text: 'HomeLab confirms your request.' },
+  { icon: UserRoundCheck, title: 'Certified collection', text: 'A certified phlebotomist visits the client to collect samples with convenience and quality.' },
+  { icon: Truck, title: 'Lab delivery', text: 'Samples are delivered to your chosen (or clinician recommended) laboratory.' },
+  { icon: FlaskConical, title: 'Reports delivered', text: 'The client receives reports as hard copy, soft copy or both, as preferred.' }
 ];
 
 const trustItems = [
   { icon: ShieldCheck, title: 'Certified mobile phlebotomists', text: 'Trained collection staff for safe field sample collection.' },
-  { icon: Thermometer, title: 'Temperature-aware transport', text: 'Specimen movement designed to protect sample integrity.' },
+  { icon: Thermometer, title: 'Temperature Control', text: 'Suitable temperature is maintained for samples throughout transport.' },
   { icon: ClipboardCheck, title: 'Full chain of custody', text: 'Each sample is documented from collection to lab receipt.' },
   { icon: MessageCircle, title: 'WhatsApp-assisted booking', text: 'Patients can book through WhatsApp and support staff can complete requests.' }
 ];
@@ -46,15 +46,15 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
       <section className="hero-section" id="home">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <div className="eyebrow"><span /> Ghana's mobile phlebotomy service</div>
+            <div className="eyebrow"><span /> Leader in mobile phlebotomy services, Ghana</div>
             <h1>We Bring the Lab to the Patient.</h1>
-            <p className="hero-text">Certified blood and sample collection at home, office, or care facility in Kumasi — with reliable transport to HomeLabs Laboratory or the patient’s preferred partner lab.</p>
+            <p className="hero-text">We get your lab samples to your referred or preferred lab facility to analyze for timely reports.</p>
             <div className="hero-actions">
               <button className="primary-button large" type="button" onClick={onBook}>Book a Home Lab Visit <ArrowRight size={18} /></button>
               <a className="secondary-button large" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Book on WhatsApp</a>
               <button className="outline-button large" type="button" onClick={onTrack}>Track booking</button>
             </div>
-            <div className="hero-note">Patients choose their lab, use HomeLabs Laboratory, or allow HomeLabs to recommend the best option.</div>
+            <div className="hero-note">Do you know stress can complicate your lab report? Skip the queue — we come to you.</div>
           </div>
 
           <div className="hero-card" aria-label="HomeLabs service summary">
@@ -64,7 +64,7 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
               <strong>Stress Tests.</strong>
             </div>
             <div className="hero-card-body">
-              <div><span>Launch city</span><strong>Kumasi</strong></div>
+              <div><span>Location</span><strong>Remote</strong></div>
               <div><span>Collection</span><strong>Home · Office · Care facility</strong></div>
               <div><span>Payment</span><strong>Paystack Mobile Money</strong></div>
             </div>
@@ -161,9 +161,9 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
         <div className="container service-area-card">
           <MapPin size={34} />
           <div>
-            <span>Launch coverage</span>
-            <h2>Kumasi first. Built to expand.</h2>
-            <p>The frontend is configured for Kumasi as the MVP launch location, while keeping the structure ready for Accra, Takoradi and Tamale expansion later.</p>
+            <span>Coverage</span>
+            <h2>Remote-first. We come to you.</h2>
+            <p>HomeLabs operates as a remote, mobile-first service. Book online, by phone or on WhatsApp, and a certified phlebotomist is dispatched to your home, office or care facility.</p>
           </div>
           <div className="service-area-actions"><button className="secondary-button" type="button" onClick={onBook}>Check booking form</button><button className="outline-button" type="button" onClick={onPartner}>Partner with us</button></div>
         </div>

@@ -54,7 +54,7 @@ function NewRequest({ actions }) {
           <SectionTitle eyebrow="Patient confirmation" title="What the patient receives" text="The patient confirms address, time, consent and payment before operations assigns the phlebotomist." />
           <div className="message-preview">
             <strong>Hello from HomeLabs.</strong>
-            <p>Your clinician has requested a lab collection. Please confirm your Kumasi address, preferred time and payment so a certified phlebotomist can be scheduled.</p>
+            <p>Your clinician has requested a lab collection. Please confirm your address, preferred time and payment so a certified phlebotomist can be scheduled.</p>
           </div>
         </div>
       </section>
