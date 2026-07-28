@@ -20,6 +20,7 @@ import {
 import { faqs } from '../data/homelabsData.js';
 import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
 import { useReveal } from '../lib/useReveal.js';
+import heroHomeVisit from '../assets/hero-home-visit.jpg';
 
 const howSteps = [
   { icon: ClipboardCheck, title: 'Order or request', text: 'Patients, clinicians or support staff create a booking from web, phone or WhatsApp.' },
@@ -46,7 +47,7 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
 
   return (
     <main>
-      <section className="hero-section" id="home">
+      <section className="hero-section" id="home" style={{ '--hero-photo': `url(${heroHomeVisit})` }}>
         <div className="container hero-grid">
           <div className="hero-copy">
             <div className="eyebrow"><span /> Leader in mobile phlebotomy services, Ghana</div>
@@ -61,11 +62,8 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
           <div className="bezel-outer">
             <div className="hero-card bezel-inner" aria-label="HomeLabs service summary">
               <div className="hero-card-top">
-                <img src="https://picsum.photos/seed/homelabs-collection-kit/700/560" alt="" />
-                <div className="hero-card-top-copy">
-                  <span>Field-ready collection</span>
-                  <strong>Lab tests shouldn't be stress tests.</strong>
-                </div>
+                <span>Field-ready collection</span>
+                <strong>Lab tests shouldn't be stress tests.</strong>
               </div>
               <div className="hero-card-body">
                 <div><span>Location</span><strong>Remote</strong></div>
