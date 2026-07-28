@@ -9,7 +9,9 @@ import {
   Hospital,
   MapPin,
   MessageCircle,
+  Plus,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   Thermometer,
   Truck,
@@ -17,75 +19,77 @@ import {
 } from 'lucide-react';
 import { faqs } from '../data/homelabsData.js';
 import { buildWhatsAppBookingUrl } from '../services/notificationService.js';
+import { useReveal } from '../lib/useReveal.js';
 
 const howSteps = [
   { icon: ClipboardCheck, title: 'Order or request', text: 'Patients, clinicians or support staff create a booking from web, phone or WhatsApp.' },
-  { icon: CheckCircle2, title: 'Request confirmed', text: 'HomeLab confirms your request.' },
-  { icon: UserRoundCheck, title: 'Certified collection', text: 'A certified phlebotomist visits the client to collect samples with convenience and quality.' },
-  { icon: Truck, title: 'Lab delivery', text: 'Samples are delivered to your chosen (or clinician recommended) laboratory.' },
-  { icon: FlaskConical, title: 'Reports delivered', text: 'The client receives reports as hard copy, soft copy or both, as preferred.' }
+  { icon: CheckCircle2, title: 'Request confirmed', text: 'HomeLabs confirms your request and prepares collection.' },
+  { icon: UserRoundCheck, title: 'Certified collection', text: 'A certified phlebotomist visits you to collect samples with care.' },
+  { icon: Truck, title: 'Lab delivery', text: 'Samples move to your chosen or clinician-recommended laboratory.' },
+  { icon: FlaskConical, title: 'Reports delivered', text: 'You receive reports as hard copy, soft copy or both.' }
 ];
 
 const trustItems = [
   { icon: ShieldCheck, title: 'Certified mobile phlebotomists', text: 'Trained collection staff for safe field sample collection.' },
-  { icon: Thermometer, title: 'Temperature Control', text: 'Suitable temperature is maintained for samples throughout transport.' },
+  { icon: Thermometer, title: 'Temperature control', text: 'Suitable temperature is maintained for samples throughout transport.' },
   { icon: ClipboardCheck, title: 'Full chain of custody', text: 'Each sample is documented from collection to lab receipt.' },
   { icon: MessageCircle, title: 'WhatsApp-assisted booking', text: 'Patients can book through WhatsApp and support staff can complete requests.' }
 ];
 
-const audiences = [
-  { id: 'patients', icon: Home, title: 'Patients', text: 'Book lab collection from your home, office or care facility without joining a clinic queue.', cta: 'Book a visit' },
-  { id: 'clinicians', icon: Stethoscope, title: 'Clinicians', text: 'Request tests for patients, track collection progress and receive released results.', cta: 'Open clinician portal' },
-  { id: 'labs', icon: FlaskConical, title: 'Laboratories', text: 'Receive lab-ready samples, confirm receipt and upload results through the lab portal.', cta: 'Become a partner lab' },
-  { id: 'hospitals', icon: Hospital, title: 'Hospitals', text: 'Extend care beyond the facility, improve follow-up completion and reduce routine draw pressure.', cta: 'Partner with us' }
-];
-
 export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
+  const howRef = useReveal();
+  const patientsRef = useReveal();
+  const audienceRef = useReveal();
+  const labsRef = useReveal();
+  const coverageRef = useReveal();
+  const faqRef = useReveal();
+
   return (
     <main>
       <section className="hero-section" id="home">
         <div className="container hero-grid">
           <div className="hero-copy">
             <div className="eyebrow"><span /> Leader in mobile phlebotomy services, Ghana</div>
-            <h1>We Bring the Lab to the Patient.</h1>
-            <p className="hero-text">We get your lab samples to your referred or preferred lab facility to analyze for timely reports.</p>
+            <h1>We bring the lab to the patient.</h1>
+            <p className="hero-text">Certified phlebotomists collect your samples at home, office or care facility and deliver them to your lab of choice.</p>
             <div className="hero-actions">
-              <button className="primary-button large" type="button" onClick={onBook}>Book a Home Lab Visit <ArrowRight size={18} /></button>
-              <a className="secondary-button large" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Book on WhatsApp</a>
-              <button className="outline-button large" type="button" onClick={onTrack}>Track booking</button>
+              <button className="primary-button large" type="button" onClick={onBook}>Book a Home Lab Visit <span className="btn-icon-chip"><ArrowRight size={14} /></span></button>
+              <a className="whatsapp-button dark" href={buildWhatsAppBookingUrl('Hello HomeLabs, I want to book a home lab visit')} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Book on WhatsApp</a>
             </div>
-            <div className="hero-note">Do you know stress can complicate your lab report? Skip the queue — we come to you.</div>
           </div>
 
-          <div className="hero-card" aria-label="HomeLabs service summary">
-            <div className="hero-card-top">
-              <div className="floating-icon"><Home size={38} /><CheckCircle2 size={25} /></div>
-              <p>Lab Tests Shouldn’t Be</p>
-              <strong>Stress Tests.</strong>
-            </div>
-            <div className="hero-card-body">
-              <div><span>Location</span><strong>Remote</strong></div>
-              <div><span>Collection</span><strong>Home · Office · Care facility</strong></div>
-              <div><span>Payment</span><strong>Paystack Mobile Money</strong></div>
+          <div className="bezel-outer">
+            <div className="hero-card bezel-inner" aria-label="HomeLabs service summary">
+              <div className="hero-card-top">
+                <img src="https://picsum.photos/seed/homelabs-collection-kit/700/560" alt="" />
+                <div className="hero-card-top-copy">
+                  <span>Field-ready collection</span>
+                  <strong>Lab tests shouldn't be stress tests.</strong>
+                </div>
+              </div>
+              <div className="hero-card-body">
+                <div><span>Location</span><strong>Remote</strong></div>
+                <div><span>Collection</span><strong>Home · Office · Care facility</strong></div>
+                <div><span>Payment</span><strong>Paystack Mobile Money</strong></div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="section light" id="how">
+      <section className="section light reveal" id="how" ref={howRef}>
         <div className="container">
           <div className="section-heading centered">
-            <span>How it works</span>
             <h2>Five steps. Zero disruption.</h2>
             <p>HomeLabs manages the path from request to sample collection, lab delivery and secure result release.</p>
           </div>
-          <div className="steps-grid">
+          <div className="steps-rail">
             {howSteps.map((step, index) => {
               const Icon = step.icon;
               return (
-                <article className="step-card" key={step.title}>
-                  <div className="step-number">{String(index + 1).padStart(2, '0')}</div>
-                  <Icon size={26} />
+                <article className="step-item" key={step.title}>
+                  <span className="step-item-number">{String(index + 1).padStart(2, '0')}</span>
+                  <Icon size={24} />
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </article>
@@ -95,13 +99,12 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
         </div>
       </section>
 
-      <section className="section" id="patients">
+      <section className="section reveal" id="patients" ref={patientsRef}>
         <div className="container split-section">
           <div className="section-heading">
-            <span>For patients</span>
             <h2>Book your lab test without leaving your space.</h2>
-            <p>Patients can select a test, upload a request form, choose a preferred laboratory or ask HomeLabs to recommend one, then pay through Paystack-supported mobile money.</p>
-            <button className="primary-button" type="button" onClick={onBook}>Start patient booking</button>
+            <p>Select a test, upload a request form, choose a preferred laboratory or let HomeLabs recommend one, then pay by mobile money.</p>
+            <button className="primary-button" type="button" onClick={onBook}>Book a Home Lab Visit</button>
           </div>
           <div className="feature-stack">
             {trustItems.map((item) => {
@@ -120,67 +123,97 @@ export function HomePage({ onBook, onLogin, onTrack, onPartner }) {
         </div>
       </section>
 
-      <section className="section light" id="clinicians">
+      <section className="section light reveal" id="clinicians" ref={audienceRef}>
         <div className="container">
           <div className="section-heading centered">
-            <span>Who we serve</span>
             <h2>One platform for patients, clinicians, labs and hospitals.</h2>
           </div>
-          <div className="audience-grid">
-            {audiences.map((item) => {
-              const Icon = item.icon;
-              return (
-                <article className="audience-card" id={item.id} key={item.title}>
-                  <div className="audience-icon"><Icon size={26} /></div>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                  <button type="button" onClick={item.id === 'patients' ? onBook : onPartner}>{item.cta}</button>
-                </article>
-              );
-            })}
+          <div className="audience-bento">
+            <article className="audience-card featured" id="patients-audience">
+              <div className="audience-icon"><Home size={26} /></div>
+              <h3>Patients</h3>
+              <p>Book lab collection from your home, office or care facility without joining a clinic queue.</p>
+              <button type="button" onClick={onBook}>Book a Home Lab Visit <span className="btn-icon-chip"><ArrowRight size={13} /></span></button>
+            </article>
+            <article className="audience-card" id="clinicians-audience">
+              <div className="audience-icon"><Stethoscope size={22} /></div>
+              <div className="audience-copy">
+                <h3>Clinicians</h3>
+                <p>Request tests for patients, track collection and receive released results.</p>
+                <button type="button" onClick={onLogin}>Open clinician portal <ArrowRight size={16} /></button>
+              </div>
+            </article>
+            <article className="audience-card" id="labs-audience">
+              <div className="audience-icon"><FlaskConical size={22} /></div>
+              <div className="audience-copy">
+                <h3>Laboratories</h3>
+                <p>Receive lab-ready samples, confirm receipt and upload results.</p>
+                <button type="button" onClick={onPartner}>Partner with us <ArrowRight size={16} /></button>
+              </div>
+            </article>
+            <article className="audience-card" id="hospitals-audience">
+              <div className="audience-icon"><Hospital size={22} /></div>
+              <div className="audience-copy">
+                <h3>Hospitals</h3>
+                <p>Extend care beyond the facility and reduce routine draw pressure.</p>
+                <button type="button" onClick={onPartner}>Partner with us <ArrowRight size={16} /></button>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section className="section" id="labs">
+      <section className="section reveal" id="labs" ref={labsRef}>
         <div className="container lab-section-card">
           <div>
-            <div className="eyebrow dark"><span /> laboratory routing</div>
+            <div className="eyebrow dark"><span /> Laboratory routing</div>
             <h2>HomeLabs Laboratory + partner labs.</h2>
-            <p>Patients can use HomeLabs Laboratory, select a partner laboratory, or let HomeLabs recommend based on test availability, location, turnaround time and operational capacity.</p>
+            <p>Use HomeLabs Laboratory, select a partner laboratory, or let HomeLabs recommend based on test availability, location and turnaround time.</p>
           </div>
-          <div className="lab-choice-grid">
-            <div><Building2 size={24} /><strong>HomeLabs Lab</strong><span>Owned processing pathway</span></div>
-            <div><FlaskConical size={24} /><strong>Partner Lab</strong><span>Patient-selected pathway</span></div>
-            <div><HeartPulse size={24} /><strong>Recommended</strong><span>HomeLabs-assisted matching</span></div>
+          <div className="lab-choice-list">
+            <div className="lab-choice-row">
+              <Building2 size={22} />
+              <div><strong>HomeLabs Lab</strong><span>Owned processing pathway</span></div>
+            </div>
+            <div className="lab-choice-row">
+              <FlaskConical size={22} />
+              <div><strong>Partner Lab</strong><span>Patient-selected pathway</span></div>
+            </div>
+            <div className="lab-choice-row recommended">
+              <HeartPulse size={22} />
+              <div><strong>Recommended</strong><span>HomeLabs-assisted matching</span></div>
+              <span className="badge"><Sparkles size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Most chosen</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section light">
-        <div className="container service-area-card">
+      <section className="section light reveal" ref={coverageRef}>
+        <div className="container service-area-card photo" style={{ backgroundImage: 'url(https://picsum.photos/seed/homelabs-ghana-coverage/1200/500)' }}>
           <MapPin size={34} />
           <div>
             <span>Coverage</span>
             <h2>Remote-first. We come to you.</h2>
-            <p>HomeLabs operates as a remote, mobile-first service. Book online, by phone or on WhatsApp, and a certified phlebotomist is dispatched to your home, office or care facility.</p>
+            <p>Book online, by phone or on WhatsApp, and a certified phlebotomist is dispatched to your home, office or care facility.</p>
           </div>
-          <div className="service-area-actions"><button className="secondary-button" type="button" onClick={onBook}>Check booking form</button><button className="outline-button" type="button" onClick={onPartner}>Partner with us</button></div>
+          <div className="service-area-actions">
+            <button className="secondary-button" type="button" onClick={onBook}>Book a Home Lab Visit</button>
+            <button className="outline-button" type="button" onClick={onPartner}>Partner with us</button>
+          </div>
         </div>
       </section>
 
-      <section className="section" id="faq">
+      <section className="section reveal" id="faq" ref={faqRef}>
         <div className="container">
           <div className="section-heading centered">
-            <span>FAQ</span>
             <h2>Common patient questions.</h2>
           </div>
-          <div className="faq-grid">
-            {faqs.map((faq) => (
-              <article className="faq-card" key={faq.question}>
-                <h3>{faq.question}</h3>
+          <div className="faq-list">
+            {faqs.map((faq, index) => (
+              <details className="faq-item" key={faq.question} open={index === 0}>
+                <summary>{faq.question} <Plus size={18} /></summary>
                 <p>{faq.answer}</p>
-              </article>
+              </details>
             ))}
           </div>
         </div>

@@ -34,7 +34,11 @@ export function PublicFooter({ onBook, onTrack, onPartner }) {
       </div>
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} HomeLabs Ghana</span>
-        <span>Ghana data-law compliance ready · Full chain of custody · Certified collection</span>
+        <div className="footer-bottom-tags">
+          <span>Ghana data-law compliance ready</span>
+          <span>Full chain of custody</span>
+          <span>Certified collection</span>
+        </div>
       </div>
     </footer>
   );

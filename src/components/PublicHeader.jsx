@@ -30,7 +30,6 @@ export function PublicHeader({ onBook, onLogin, onSignup, onTrack, onPartner }) 
           </a>
           <button className="secondary-button small portal-login-button" type="button" onClick={onTrack}>Track</button>
           <button className="secondary-button small portal-login-button" type="button" onClick={onLogin}>Sign in</button>
-          <button className="secondary-button small portal-login-button" type="button" onClick={onSignup}>Sign up</button>
           <button className="primary-button small" type="button" onClick={onBook}>Book visit</button>
           <button className="mobile-menu-button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Open menu">
             {open ? <X /> : <Menu />}
