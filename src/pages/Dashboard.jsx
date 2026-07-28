@@ -3,7 +3,7 @@ import { DashboardLayout, getFirstSectionForRole } from '../layouts/DashboardLay
 import { serviceAreas } from '../data/homelabsData.js';
 import { getNextStatuses } from '../workflow/bookingWorkflow.js';
 import { attachPagination, paginationFrom, LOCAL_DATA_MODE } from '../services/apiClient.js';
-import { createBooking, listBookings, updateBookingStatus } from '../services/bookingService.js';
+import { createBooking, createClinicianBooking, listBookings, updateBookingStatus, uploadPrescription } from '../services/bookingService.js';
 import { recordManualPayment, listPayments } from '../services/paymentService.js';
 import { confirmSampleReceipt as apiConfirmSampleReceipt, listAcceptedSamples, listIncomingSamples, markSampleProcessing as apiMarkSampleProcessing, rejectSample as apiRejectSample } from '../services/labService.js';
 import { releaseResult as apiReleaseResult, uploadResult as apiUploadResult } from '../services/resultService.js';
@@ -538,34 +538,69 @@ export function Dashboard({ role, user, initialSection, onBackHome, onLogout }) 
   }
 
   async function createClinicianRequest(payload) {
-    const patientName = payload.patient || 'New Patient';
-    const requestedTest = payload.test || 'Clinician selected test';
-    const bookingId = await createManualBooking({
-      patient: patientName,
-      phone: payload.phone,
-      tests: requestedTest,
-      lab: payload.lab,
-      area: 'Patient confirmation pending',
-      address: 'Patient confirmation pending',
-      time: 'Patient confirmation pending',
-      payment: payload.payment || 'Pending',
-      amount: 0,
-      priority: 'Clinician request'
-    });
+    const patientName = payload.patient?.fullName || 'New Patient';
+    const testNames = payload.testNames?.length ? payload.testNames : (payload.customTest ? [payload.customTest] : ['Clinician selected test']);
+    const billingNote = payload.payment ? `Billing responsibility: ${payload.payment}.` : '';
+    const releaseNote = payload.releaseRule ? `Preferred result release: ${payload.releaseRule}.` : '';
+    const combinedNotes = [billingNote, releaseNote, payload.notes].filter(Boolean).join(' ');
 
-    if (!bookingId) return;
+    try {
+      const uploadedPrescription = payload.prescriptionFile ? await uploadPrescription(payload.prescriptionFile) : null;
 
-    const request = {
-      id: bookingId,
-      patient: patientName,
-      tests: [requestedTest],
-      clinician: 'Current clinician',
-      status: 'Submitted',
-      result: 'Pending',
-      created: 'Just now'
-    };
-    setClinicianRequests((items) => [request, ...items]);
-    addActivity(`${bookingId} clinician request created and sent for patient confirmation.`);
+      let created;
+      if (!LOCAL_DATA_MODE) {
+        created = await createClinicianBooking({
+          source: 'clinician',
+          patient: {
+            fullName: patientName,
+            phone: payload.patient?.phone || '',
+            email: payload.patient?.email || ''
+          },
+          tests: payload.testIds || [],
+          customTest: payload.customTest || '',
+          notes: combinedNotes,
+          prescriptionFileId: uploadedPrescription?.fileId,
+          labChoice: payload.labChoice === 'partner' ? 'partner' : payload.labChoice === 'homelabs' ? 'homelabs-lab' : 'recommend',
+          selectedLabId: payload.labChoice === 'partner' ? payload.partnerLabId || null : null,
+          location: {
+            areaId: null,
+            address: 'Patient confirmation pending',
+            landmark: '',
+            facilityType: 'Home'
+          },
+          schedule: { date: '', timeSlot: '', urgency: 'Routine' },
+          consent: true,
+          paymentMethod: payload.payment === 'Hospital / clinic billed' ? 'institution_billing' : 'manual'
+        });
+        setBookings((items) => [created, ...items]);
+      } else {
+        const localId = buildBookingId(bookings);
+        created = {
+          id: localId,
+          patient: patientName,
+          tests: testNames,
+          lab: payload.labChoice === 'partner' ? 'Selected partner lab' : payload.labChoice === 'homelabs' ? 'HomeLabs Laboratory' : 'HomeLabs recommendation',
+          status: 'Under Review'
+        };
+        setBookings((items) => [created, ...items]);
+      }
+
+      const request = {
+        id: created.id,
+        patient: patientName,
+        tests: testNames,
+        clinician: 'Current clinician',
+        status: 'Submitted',
+        result: 'Pending',
+        created: 'Just now'
+      };
+      setClinicianRequests((items) => [request, ...items]);
+      addActivity(`${created.id} clinician request created for ${testNames.join(', ')} and sent for patient confirmation.`);
+      return created;
+    } catch (error) {
+      addErrorActivity('Clinician request', error);
+      throw error;
+    }
   }
 
   const data = useMemo(() => ({

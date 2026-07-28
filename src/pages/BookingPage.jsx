@@ -529,6 +529,7 @@ function buildApiBookingPayload({ form, selectedTests, selectedArea, selectedPar
     },
     tests: selectedTests.map((test) => test.id),
     customTest: form.customTest,
+    notes: form.notes,
     prescriptionFileId: uploadedPrescription?.fileId,
     prescriptionUrl: uploadedPrescription?.fileUrl,
     labChoice,
